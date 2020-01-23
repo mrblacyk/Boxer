@@ -4,4 +4,8 @@ from django.shortcuts import render
 
 
 def index(request):
-    return render(request, "panel/index.html", {})
+    return render(request, "panel/index.html", {'username': 'h4wky'})
+
+
+def login(request):
+    return render(request, "panel/login.html", {})

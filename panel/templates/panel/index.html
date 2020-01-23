@@ -55,7 +55,12 @@ to get the desired effect
         </div>
       </div>
     </form>
-
+    <!-- Right navbar links -->
+    <ul class="navbar-nav ml-auto">
+    <li class="nav-item">
+        <a href="/logout/" class="nav-link">Logout</a>
+      </li>
+    </ul>
 
   </nav>
   <!-- /.navbar -->
@@ -77,7 +82,7 @@ to get the desired effect
           <img src="{% static "notdist/img/user2-160x160.jpg" %}" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-          <a href="#" class="d-block">h4wky</a>
+          <a href="#" class="d-block">{{ username }}</a>
         </div>
       </div>
 
@@ -268,7 +273,7 @@ to get the desired effect
                     </td>
                     <td>
                       <a href="#" class="text-muted">
-                        <i class="fab fa-accessible-icon"></i>
+                        <i class="fas fa-redo"></i>
                       </a>
                     </td>
                   </tr>
@@ -287,7 +292,7 @@ to get the desired effect
                     </td>
                     <td>
                       <a href="#" class="text-muted">
-                        <i class="fab fa-accessible-icon"></i>
+                        <i class="fas fa-redo"></i>
                       </a>
                     </td>
                   </tr>
@@ -306,7 +311,7 @@ to get the desired effect
                     </td>
                     <td>
                       <a href="#" class="text-muted">
-                        <i class="fab fa-accessible-icon"></i>
+                        <i class="fas fa-redo"></i>
                       </a>
                     </td>
                   </tr>
@@ -326,7 +331,7 @@ to get the desired effect
                     </td>
                     <td>
                       <a href="#" class="text-muted">
-                        <i class="fab fa-accessible-icon"></i>
+                        <i class="fas fa-redo"></i>
                       </a>
                     </td>
                   </tr>
@@ -356,10 +361,9 @@ to get the desired effect
 
   <!-- Main Footer -->
   <footer class="main-footer">
-    <strong>Copyright &copy; 2014-2019 <a href="http://adminlte.io">AdminLTE.io</a>.</strong>
-    All rights reserved.
+    <strong>AlphaPwners <a href="https://www.hackthebox.eu/teams/profile/673">HTB Team</a>.</strong>
     <div class="float-right d-none d-sm-inline-block">
-      <b>Version</b> 3.0.3-pre
+      <b>Version</b> 0.1
     </div>
   </footer>
 </div>
