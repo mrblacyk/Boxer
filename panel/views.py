@@ -34,7 +34,7 @@ def start_machine(request, machine_id):
 @login_required
 def stop_machine(request, machine_id):
     sleep(1)
-    return HttpResponse(status=400)
+    return HttpResponse(status=204)
 
 
 @login_required

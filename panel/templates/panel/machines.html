@@ -65,19 +65,19 @@
 
                         </td>
                         <td class="project-actions text-right">
-                            <button class="btn btn-success btn-sm" id="machine-start{{ machine.id }}">
+                            <button class="btn btn-success btn-sm" id="machine-start-{{ machine.id }}">
                                 <i class="fas fa-play">
                                 </i>
                             </button>
-                            <button class="btn btn-danger btn-sm" id="machine-stop{{ machine.id }}">
+                            <button class="btn btn-danger btn-sm" id="machine-stop-{{ machine.id }}">
                                 <i class="fas fa-stop">
                                 </i>
                             </button>
-                            <button class="btn btn-warning btn-sm" id="machine-reset{{ machine.id }}">
+                            <button class="btn btn-warning btn-sm" id="machine-reset-{{ machine.id }}">
                                 <i class="fas fa-redo">
                                 </i>
                             </button>
-                            <button class="btn btn-info btn-sm" id="machine-flag{{ machine.id }}">
+                            <button class="btn btn-info btn-sm" id="send-flag-{{ machine.id }}">
                                 <i class="fas fa-flag">
                                 </i>
                             </button>
@@ -95,16 +95,31 @@
 
 {% block scripts %}
 <script>
-$("[id^='machine-start']").click(function(){
-  var button_object = $(this);
-  button_object.attr("disabled", true)
-  $.ajax({              
-   url: '/machines/start/1/',
-   error: function(response){
-      $.notify({message: "blad"},{offset: {y: 70, x: 20}});
-      button_object.attr("disabled", false);
-    },
+  var past_terms = {
+    "start": "started",
+    "stop": "stopped",
+    "reset": "reset",
+  }
+  // Machine Start/Stop/Reset AJAX
+  $("[id^='machine-']").click(function(){
+    var button_object = $(this);
+    var button_array = button_object.attr("id").split("-")
+    button_object.attr("disabled", true);
+    var prev_value = button_object.html()
+    button_object.html('<div class="spinner-border spinner-border-sm" role="status" style="padding: 0px; margin: 0px;"><span class="sr-only">Loading...</span></div>')
+    $.ajax({              
+     url: '/machines/' + button_array[1] + '/' + button_array[2] + '/',
+     error: function(response){
+        $.notify({message: "Failed to " + past_terms[button_array[1]] + " a machine (#" + button_array[2] + ")"},{type: 'danger', offset: {y: 70, x: 20}});
+        button_object.attr("disabled", false);
+        button_object.html(prev_value);
+      },
+      success: function(response){
+        $.notify({message: "Successfully " + past_terms[button_array[1]] + " a machine (#" + button_array[2] + ")"},{type: 'success', offset: {y: 70, x: 20}});
+        button_object.attr("disabled", false);
+        button_object.html(prev_value);
+      },
+    });
   });
-});
 </script>
 {% endblock %}
