@@ -50,7 +50,11 @@
                 {% csrf_token %}
                 <div class="card-body">
                   <div class="form-group">
-                    {{ form.receiver|as_crispy_field }}
+                    <!-- {{ form.receiver|as_crispy_field }} -->
+                    <label for="id_subject" class=" requiredField">
+                        To<span class="asteriskField">*</span>
+                    </label>
+                    <input class="form-control basicAutoComplete" type="text" autocomplete="on" name="receiver" placeholder="Start typing..">
                   </div>
                   <div class="form-group">
                     {{ form.subject|as_crispy_field }}
@@ -84,6 +88,12 @@
 <script>
 $("#discard").click(function(){
     window.location.href = "/mailbox/compose/";
+});
+$('.basicAutoComplete').autoComplete({
+    resolverSettings: {
+        url: '/users/q.json'
+    },
+    minLength: 1,
 });
 </script>
 {% endblock %}

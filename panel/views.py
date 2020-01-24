@@ -2,11 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import HttpResponse
 from time import sleep
 from .models import Messages
 from .forms import MailComposeForm
+from datetime import datetime
+import json
 
 # Create your views here.
 
@@ -29,19 +32,46 @@ def news(request):
 
 @login_required
 def start_machine(request, machine_id):
+    # sd
     sleep(1)
+    if request.method == "GET":
+        # Started
+        return HttpResponse(status=241)
+        # Already started
+        return HttpResponse(status=242)
     return HttpResponse(status=400)
 
 
 @login_required
 def stop_machine(request, machine_id):
     sleep(1)
-    return HttpResponse(status=204)
+    if request.method == "GET":
+        # Stopped
+        return HttpResponse(status=251)
+        # Already stopped
+        return HttpResponse(status=252)
+    return HttpResponse(status=400)
 
 
 @login_required
 def reset_machine(request, machine_id):
     sleep(1)
+    if request.method == "GET":
+        # Reset scheduled
+        return HttpResponse(status=261)
+        # Already scheduled reset
+        return HttpResponse(status=262)
+    return HttpResponse(status=400)
+
+
+@login_required
+def cancel_reset_machine(request, machine_id):
+    sleep(1)
+    if request.method == "GET":
+        # Canceled
+        return HttpResponse(status=271)
+        # Already canceled
+        return HttpResponse(status=272)
     return HttpResponse(status=400)
 
 
@@ -49,12 +79,12 @@ def reset_machine(request, machine_id):
 def send_flag(request, machine_id):
     sleep(1)
     if request.method == "POST" and request.POST.get("flag"):
-        if request.POST.get("flag") == "261":
+        if request.POST.get("flag") == "281":
             # User
-            return HttpResponse(status=261)
-        elif request.POST.get("flag") == "262":
+            return HttpResponse(status=281)
+        elif request.POST.get("flag") == "282":
             # Root
-            return HttpResponse(status=262)
+            return HttpResponse(status=282)
     return HttpResponse(status=400)
 
 
@@ -62,7 +92,7 @@ def send_flag(request, machine_id):
 def mailbox_inbox(request):
     mailbox_messages = Messages.objects.filter(
         receiver=request.user, trash=False
-    )
+    ).order_by('-created_at')
     mailbox_unread_count = len(mailbox_messages.filter(read=False))
     return render(request, "panel/mailbox_inbox.html", {
         "mailbox_messages": mailbox_messages,
@@ -75,7 +105,7 @@ def mailbox_inbox(request):
 def mailbox_trash(request):
     mailbox_messages = Messages.objects.filter(
         receiver=request.user, trash=True
-    )
+    ).order_by('-created_at')
     mailbox_unread_count = len(mailbox_messages.filter(read=False))
     return render(request, "panel/mailbox_inbox.html", {
         "mailbox_messages": mailbox_messages,
@@ -88,7 +118,7 @@ def mailbox_trash(request):
 def mailbox_sent(request):
     mailbox_messages = Messages.objects.filter(
         sender=request.user,
-    )
+    ).order_by('-created_at')
     mailbox_unread_count = len(mailbox_messages.filter(read=False))
     return render(request, "panel/mailbox_inbox.html", {
         "mailbox_messages": mailbox_messages,
@@ -115,19 +145,49 @@ def mailbox_read(request, mail_id):
 
 @login_required
 def mailbox_compose(request):
-    if request.method == "POST":
-        print(request.POST)
-        messages.info(request, "Message sent!")
-        return redirect("/mailbox/compose/")
     mailbox_messages = Messages.objects.filter(
         sender=request.user,
     )
+    if request.method == "POST":
+        form = MailComposeForm(request.POST)
+        if form.is_valid():
+            new_mail = Messages()
+            new_mail.sender = User.objects.get(username=request.user)
+            new_mail.receiver = User.objects.get(
+                username=request.POST.get('receiver')
+            )
+            new_mail.subject = request.POST.get('subject')
+            new_mail.content = request.POST.get('content')
+            new_mail.created_at = datetime.now()
+            new_mail.save()
+            messages.info(request, "Message sent!")
+        return redirect("/mailbox/compose/")
+
     mailbox_unread_count = len(mailbox_messages.filter(read=False))
     form = MailComposeForm()
     return render(request, "panel/mailbox_compose.html", {
         "mailbox_unread_count": mailbox_unread_count,
         'form': form,
     })
+
+
+@login_required
+def mailbox_user_query(request):
+    if request.method == "GET" and request.GET.get("q"):
+        response_data = []
+        query = str(request.GET.get("q"))
+        results = User.objects.filter(username__startswith=query)[:5]
+        for result in results:
+            tmp = {}
+            tmp["value"] = result.id
+            tmp["text"] = result.username
+            response_data.append(tmp)
+            del tmp
+        return HttpResponse(
+            json.dumps(response_data), content_type="application/json"
+        )
+    else:
+        return redirect("/")
 
 
 @login_required

@@ -15,6 +15,8 @@ urlpatterns = [
          name='stop_machine'),
     path('machines/reset/<int:machine_id>/', views.reset_machine,
          name='reset_machine'),
+    path('machines/cancel/<int:machine_id>/', views.cancel_reset_machine,
+         name='cancel_reset_machine'),
     path('machines/flag/<int:machine_id>/', views.send_flag,
          name='send_flag'),
 
@@ -25,6 +27,7 @@ urlpatterns = [
     path('mailbox/compose/', views.mailbox_compose, name='mailbox_compose'),
     path('mailbox/read/<uuid:mail_id>/', views.mailbox_read,
          name='mailbox_read'),
+    path('users/q.json', views.mailbox_user_query, name='mailbox_user_query'),
 
     # User handling URLs
     path('login/', views.login_view, name='login_view'),
