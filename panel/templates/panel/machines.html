@@ -110,7 +110,7 @@
         <input type="hidden" id="machine-id" class="form-control" />
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="submit-flag">Submit</button>
+        <button type="button" class="btn btn-primary" id="submit-flag" onclick='send_flag_ajax($("#submit-flag"))'>Submit</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>
@@ -226,15 +226,14 @@
   }
 
   // Submit flag AJAX
-  $("#submit-flag").click(function(){
-    var button_object = $(this);
+  function send_flag_ajax(submit_object){
+    var button_object = submit_object;
     var prev_value = button_object.html()
     button_object.html('<div class="spinner-border spinner-border-sm" role="status" style="padding: 0px; margin: 0px;"><span class="sr-only">Loading...</span></div> Submit')
     button_object.attr("disabled", true);
     var modal = $('#flagModal');
     var flag_value = modal.find('#flag-value').val()
     var machine_id = modal.find('#machine-id').val()
-    console.log(flag_value)
 
     $.ajax({              
       url: '/machines/flag/' + machine_id + '/',
@@ -262,8 +261,15 @@
           highlightRoot(machine_id);
           $.notify({message: "System pwned!"},{type: 'success', offset: {y: 70, x: 20}});
         }
+        if ($("#user-" + machine_id).css('opacity') == '1' && $("#root-" + machine_id).css('opacity') == '1') {
+          $("[data-id=" + machine_id + "]").attr("disabled", true);
+        }
       }
     });
+  };
+
+  $('#flag-value').on("keypress", function (e) {
+      if (e.which == 13) send_flag_ajax($("#submit-flag"))
   });
 
 </script>
