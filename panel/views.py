@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.http import HttpResponse
 from time import sleep
+from .models import Messages
 
 # Create your views here.
 
@@ -57,9 +58,73 @@ def send_flag(request, machine_id):
 
 
 @login_required
+def mailbox_inbox(request):
+    mailbox_messages = Messages.objects.filter(
+        receiver=request.user, trash=False
+    )
+    mailbox_unread_count = len(mailbox_messages.filter(read=False))
+    return render(request, "panel/mailbox_inbox.html", {
+        "mailbox_messages": mailbox_messages,
+        "mailbox_unread_count": mailbox_unread_count,
+        "folder": "Inbox",
+    })
+
+
+@login_required
+def mailbox_trash(request):
+    mailbox_messages = Messages.objects.filter(
+        receiver=request.user, trash=True
+    )
+    mailbox_unread_count = len(mailbox_messages.filter(read=False))
+    return render(request, "panel/mailbox_inbox.html", {
+        "mailbox_messages": mailbox_messages,
+        "mailbox_unread_count": mailbox_unread_count,
+        "folder": "Trash",
+    })
+
+
+@login_required
+def mailbox_sent(request):
+    mailbox_messages = Messages.objects.filter(
+        sender=request.user,
+    )
+    mailbox_unread_count = len(mailbox_messages.filter(read=False))
+    return render(request, "panel/mailbox_inbox.html", {
+        "mailbox_messages": mailbox_messages,
+        "mailbox_unread_count": mailbox_unread_count,
+        "folder": "Sent",
+    })
+
+@login_required
+def mailbox_read(request, mail_id):
+    mailbox_message = Messages.objects.get(id=mail_id)
+    if not mailbox_message.read:
+        mailbox_message.read = True
+        mailbox_message.save()
+    mailbox_messages = Messages.objects.filter(
+        receiver=request.user, trash=False
+    )
+    mailbox_unread_count = len(mailbox_messages.filter(read=False))
+    return render(request, "panel/mailbox_read.html", {
+        "mailbox_message": mailbox_message,
+        "mailbox_unread_count": mailbox_unread_count
+    })
+
+
+@login_required
+def mailbox_compose(request):
+    mailbox_messages = Messages.objects.filter(
+        sender=request.user,
+    )
+    mailbox_unread_count = len(mailbox_messages.filter(read=False))
+    return render(request, "panel/mailbox_compose.html", {
+        "mailbox_unread_count": mailbox_unread_count,
+        "folder": "Compose",
+    })
+
+@login_required
 def machines(request):
     context = {}
-    context.update({'username': request.user.username})
     context.update({'machines': []})
     context['machines'].append({
         'name': 'First',
@@ -125,14 +190,12 @@ def login_view(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, "Logged in!")
-                messages.warning(request, "Warning!")
-                messages.warning(request, "Warning!")
-                messages.warning(request, "Warning!")
-                messages.error(request, "Error!")
-                messages.warning(request, "Warning!")
-                messages.success(request, "Logged in!")
-                messages.success(request, "Logged in!")
+                messages.success(
+                    request, (
+                        f"Welcome back <b>{username}</b>!"
+                        " <i class='fas fa-crown'></i>"
+                    )
+                )
                 return redirect('index')
             else:
                 messages.error(request, "Invalid username or password")

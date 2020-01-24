@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block main_content %}
+    <div class="container-fluid">
       <!-- Default box -->
       <div class="card">
         <div class="card-header">
@@ -91,6 +92,7 @@
         <!-- /.card-body -->
       </div>
       <!-- /.card -->
+    </div>
 {% endblock %}
 
 {% block scripts %}
@@ -192,16 +194,17 @@
       },
       success: function(response, textStatus, xhr){
         modal.modal('hide');
-        $.notify({message: "Submited!"},{type: 'success', offset: {y: 70, x: 20}});
         button_object.attr("disabled", false);
         button_object.html(prev_value);
       },
       complete: function(xhr, textStatus) {
         if (xhr.status == 261) {
           highlightUser(machine_id);
+          $.notify({message: "User owned!"},{type: 'success', offset: {y: 70, x: 20}});
         }
         if (xhr.status == 262) {
           highlightRoot(machine_id);
+          $.notify({message: "System pwned!"},{type: 'success', offset: {y: 70, x: 20}});
         }
       }
     });

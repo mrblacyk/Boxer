@@ -18,6 +18,14 @@ urlpatterns = [
     path('machines/flag/<int:machine_id>/', views.send_flag,
          name='send_flag'),
 
+    # Mailbox
+    path('mailbox/', views.mailbox_inbox, name='mailbox_inbox'),
+    path('mailbox/trash/', views.mailbox_trash, name='mailbox_trash'),
+    path('mailbox/sent/', views.mailbox_sent, name='mailbox_sent'),
+    path('mailbox/compose/', views.mailbox_compose, name='mailbox_compose'),
+    path('mailbox/read/<uuid:mail_id>/', views.mailbox_read,
+         name='mailbox_read'),
+
     # User handling URLs
     path('login/', views.login_view, name='login_view'),
     path('logout/', views.logout_view, name='logout_view'),

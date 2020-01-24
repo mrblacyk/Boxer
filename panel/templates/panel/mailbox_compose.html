@@ -1,0 +1,94 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block main_content %}
+<link rel="stylesheet" href="{% static "plugins/summernote/summernote-bs4.css" %}">
+    <section class="content">
+      <div class="row">
+        <div class="col-md-3">
+            <a href="/mailbox/" class="btn btn-primary btn-block mb-3">Back to Inbox</a>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Folders</h3>
+
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <ul class="nav nav-pills flex-column">
+                <li class="nav-item active">
+                  <a href="/mailbox/" class="nav-link">
+                    <i class="fas fa-inbox"></i> Inbox
+                    {% if mailbox_unread_count %}<span class="badge bg-primary float-right">{{ mailbox_unread_count }}</span> {% endif %}
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/mailbox/sent/" class="nav-link">
+                    <i class="far fa-envelope"></i> Sent
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="/mailbox/trash/" class="nav-link">
+                    <i class="far fa-trash-alt"></i> Trash
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- /.card-body -->
+          </div>
+        </div>
+          <div class="col-md-9">
+            <div class="card card-primary card-outline">
+              <div class="card-header">
+                <h3 class="card-title">Compose New Message</h3>
+              </div>
+              <!-- /.card-header -->
+              <form action="/mailbox/compose/" method="POST">
+              {% csrf_token %}
+              <div class="card-body">
+                <div class="form-group">
+                  <input class="form-control" placeholder="To:">
+                </div>
+                <div class="form-group">
+                  <input class="form-control" placeholder="Subject:">
+                </div>
+                <div class="form-group">
+                        <textarea id="compose-textarea" class="form-control" name="compose-textarea" style="height: 300px">
+                        </textarea>
+                </form>
+                </div>
+              </div>
+              <!-- /.card-body -->
+              <div class="card-footer">
+                <div class="float-right">
+                  <!-- <button type="button" class="btn btn-default"><i class="fas fa-pencil-alt"></i> Draft</button> -->
+                  <button type="submit" class="btn btn-primary"><i class="far fa-envelope"></i> Send</button>
+                </div>
+                <button type="reset" class="btn btn-default" id="discard"><i class="fas fa-times"></i> Discard</button>
+              </div>
+              <!-- /.card-footer -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static "plugins/summernote/summernote-bs4.min.js" %}"></script>
+<script>
+$(function () {
+    $('#compose-textarea').summernote()
+});
+$("#discard").click(function(){
+    window.location.href = "/mailbox/compose/";
+});
+</script>
+{% endblock %}

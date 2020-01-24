@@ -28,10 +28,10 @@
         <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="index3.html" class="nav-link">Home</a>
+        <a href="/" class="nav-link">Home</a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="#" class="nav-link">Contact</a>
+        <a href="/contact/" class="nav-link">Contact</a>
       </li>
     </ul>
 
@@ -73,7 +73,7 @@
           <img src="{% static "notdist/img/aplogo.png" %}" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-          <a href="#" class="d-block">{{ username }}</a>
+          <a href="#" class="d-block">{{ request.user }}</a>
         </div>
       </div>
 
@@ -116,7 +116,7 @@
               </p>
             </a>
           </li>
-          <li class="nav-item">
+<!--           <li class="nav-item">
             <a href="/calendar/" class="nav-link">
               <i class="nav-icon fas fa-calendar-alt"></i>
               <p>
@@ -124,35 +124,14 @@
                 <span class="badge badge-info right">2</span>
               </p>
             </a>
-          </li>
-          <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
+          </li> -->
+          <li class="nav-item">
+            <a href="/mailbox/" class="nav-link">
               <i class="nav-icon far fa-envelope"></i>
               <p>
                 Mailbox
-                <i class="fas fa-angle-left right"></i>
               </p>
             </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="/mailbox/" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Inbox</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="/mailbox/compose/" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Compose</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="/mailbox/read/" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Read</p>
-                </a>
-              </li>
-            </ul>
           </li>
           
         </ul>
@@ -171,12 +150,12 @@
           <div class="col-sm-6">
             <h1 class="m-0 text-dark">Statistics</h1>
           </div><!-- /.col -->
-          <div class="col-sm-6">
+          <!-- <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="#">Home</a></li>
               <li class="breadcrumb-item active">Statistics</li>
             </ol>
-          </div><!-- /.col -->
+          </div> --><!-- /.col -->
         </div><!-- /.row -->
       </div><!-- /.container-fluid -->
     </div>
@@ -184,9 +163,7 @@
 
     <!-- Main content -->
     <div class="content">
-      <div class="container-fluid">
         {% block main_content %}{% endblock %}
-      </div>
       <!-- /.container-fluid -->
     </div>
     <!-- /.content -->
@@ -231,11 +208,11 @@
   {% for message in messages %}    
       $.notify({
         {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-        title: "<i class='fas fa-check'></i><b>Success!</b><br>",
+        title: "<i class='fas fa-check'></i> <b>Success!</b><br>",
         {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
-        title: "<i class='fas fa-exclamation-triangle'></i><b>Warning!</b><br>",
+        title: "<i class='fas fa-exclamation-triangle'></i> <b>Warning!</b><br>",
         {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-        title: "<i class='fas fa-exclamation-circle'></i><b>Error!</b><br>",
+        title: "<i class='fas fa-exclamation-circle'></i> <b>Error!</b><br>",
         {% endif %}
         message: "{{ message|safe }}"
       },{
