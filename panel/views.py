@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from time import sleep
 from .models import Messages
+from .forms import MailComposeForm
 
 # Create your views here.
 
@@ -95,6 +96,7 @@ def mailbox_sent(request):
         "folder": "Sent",
     })
 
+
 @login_required
 def mailbox_read(request, mail_id):
     mailbox_message = Messages.objects.get(id=mail_id)
@@ -113,14 +115,20 @@ def mailbox_read(request, mail_id):
 
 @login_required
 def mailbox_compose(request):
+    if request.method == "POST":
+        print(request.POST)
+        messages.info(request, "Message sent!")
+        return redirect("/mailbox/compose/")
     mailbox_messages = Messages.objects.filter(
         sender=request.user,
     )
     mailbox_unread_count = len(mailbox_messages.filter(read=False))
+    form = MailComposeForm()
     return render(request, "panel/mailbox_compose.html", {
         "mailbox_unread_count": mailbox_unread_count,
-        "folder": "Compose",
+        'form': form,
     })
+
 
 @login_required
 def machines(request):

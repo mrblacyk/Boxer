@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'panel',
+    'crispy_forms',
+    'django_summernote',
 ]
 
 MIDDLEWARE = [
@@ -125,3 +127,12 @@ STATICFILES_DIRS = [
 ]
 
 LOGIN_URL = '/login/'
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+SUMMERNOTE_THEME = 'bs4'
