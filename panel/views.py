@@ -46,6 +46,13 @@ def reset_machine(request, machine_id):
 @login_required
 def send_flag(request, machine_id):
     sleep(1)
+    if request.method == "POST" and request.POST.get("flag"):
+        if request.POST.get("flag") == "261":
+            # User
+            return HttpResponse(status=261)
+        elif request.POST.get("flag") == "262":
+            # Root
+            return HttpResponse(status=262)
     return HttpResponse(status=400)
 
 
