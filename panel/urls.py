@@ -4,8 +4,8 @@ from . import views
 
 urlpatterns = [
     # Dashboards
-    path('', views.index, name='index'),
-    path('news/', views.news, name='news'),
+    path('statistics/', views.index, name='index'),
+    path('', views.news, name='news'),
 
     # Machine related URLs
     path('machines/', views.machines, name='machines'),

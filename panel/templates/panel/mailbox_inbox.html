@@ -6,7 +6,7 @@
     <section class="content">
       <div class="row">
         <div class="col-md-3">
-          <a href="/mailbox/compose/" class="btn btn-primary btn-block mb-3">Compose</a>
+          <a href="/mailbox/compose/" class="btn btn-primary btn-block mb-3">Compose <i class="far fa-paper-plane"></i></a>
 
           <div class="card">
             <div class="card-header">
@@ -58,12 +58,12 @@
                 <button type="button" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i>
                 </button>
                 <div class="btn-group">
-                  <button type="button" class="btn btn-default btn-sm"><i class="far fa-trash-alt"></i></button>
+                  <button disabled=disabled type="button" class="btn btn-default btn-sm"><i class="far fa-trash-alt"></i></button>
                   <!-- <button type="button" class="btn btn-default btn-sm"><i class="fas fa-reply"></i></button> -->
                   <!-- <button type="button" class="btn btn-default btn-sm"><i class="fas fa-share"></i></button> -->
                 </div>
                 <!-- /.btn-group -->
-                <button type="button" class="btn btn-default btn-sm"><i class="fas fa-sync-alt"></i></button>
+                <button disabled=disabled type="button" class="btn btn-default btn-sm"><i class="fas fa-sync-alt"></i></button>
 <!--                 <div class="float-right">
                   1-50/200
                   <div class="btn-group">
@@ -79,15 +79,15 @@
                     {% if mailbox_messages %}
                         {% for mailbox_message in mailbox_messages %}
                             <tr>
-                                <td>
+                                <td style="width: 1%;">
                                     <div class="icheck-primary">
                                         <input type="checkbox" value="" id="check-{{ mailbox_message.id }}">
                                         <label for="check-{{ mailbox_message.id }}"></label>
                                     </div>
                                 </td>
                                 <!-- <td class="mailbox-star"><a href="#"><i class="fas fa-star text-warning"></i></a></td> -->
-                                <td class="mailbox-name">{% if not mailbox_message.read  %}<b>{% endif %}{{ mailbox_message.sender }}{% if not mailbox_message.read  %}</b>{% endif %}</td>
-                                <td class="mailbox-subject">{% if not mailbox_message.read  %}<b>{% endif %}<a href="/mailbox/read/{{ mailbox_message.id }}/">{{ mailbox_message.subject }}</a>{% if not mailbox_message.read  %}</b>{% endif %}
+                                <td class="mailbox-name" style="width: 10%; text-align: left;">{% if not mailbox_message.read  %}<b>{% endif %}{{ mailbox_message.sender }}{% if not mailbox_message.read  %}</b>{% endif %}</td>
+                                <td class="mailbox-subject" style="width: 40%; text-align: left;">{% if not mailbox_message.read  %}<b>{% endif %}<a href="/mailbox/read/{{ mailbox_message.id }}/">{{ mailbox_message.subject }}</a>{% if not mailbox_message.read  %}</b>{% endif %}
                                 </td>
                                 <!-- <td class="mailbox-attachment"></td> -->
                                 <!-- <td class="mailbox-date">5 mins ago</td> -->
@@ -107,12 +107,12 @@
                 <button type="button" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i>
                 </button>
                 <div class="btn-group">
-                  <button type="button" class="btn btn-default btn-sm"><i class="far fa-trash-alt"></i></button>
+                  <button disabled=disabled type="button" class="btn btn-default btn-sm"><i class="far fa-trash-alt"></i></button>
                   <!-- <button type="button" class="btn btn-default btn-sm"><i class="fas fa-reply"></i></button> -->
                   <!-- <button type="button" class="btn btn-default btn-sm"><i class="fas fa-share"></i></button> -->
                 </div>
                 <!-- /.btn-group -->
-                <button type="button" class="btn btn-default btn-sm"><i class="fas fa-sync-alt"></i></button>
+                <button disabled=disabled type="button" class="btn btn-default btn-sm"><i class="fas fa-sync-alt"></i></button>
                 <!-- /.float-right -->
               </div>
             </div>

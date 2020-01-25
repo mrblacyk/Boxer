@@ -26,4 +26,5 @@ class News(models.Model):
         User, related_name="author", on_delete=models.SET_NULL, null=True
     )
     title = models.CharField(max_length=255)
+    created_at = models.DateTimeField()
     content = models.TextField()

@@ -1,0 +1,18 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block main_content %}
+<div><center>
+    {% if news %}
+        {% for item in news %}
+            <div class="card" style="width: 40rem;">
+              <div class="card-body" style="text-align: left;">
+                <h5 class="card-title"><b>{{ item.title }}</b></h5><br/><h9>{{ item.author }} at {{ item.created_at }}</h9><hr/>
+                <p class="card-text" style="text-align: left;">{{ item.content }}</p>
+              </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</center></div>
+{% endblock %}

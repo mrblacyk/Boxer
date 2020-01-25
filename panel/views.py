@@ -6,9 +6,9 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import HttpResponse
 from time import sleep
-from .models import Messages
-from .forms import MailComposeForm
-from datetime import datetime
+from .models import Messages, News
+from .forms import MailComposeForm, NewsForm
+from datetime import datetime, timedelta
 import json
 
 # Create your views here.
@@ -26,6 +26,13 @@ def index(request):
 def news(request):
     context = {}
     context.update({'username': request.user.username})
+
+    delta = datetime.now() - timedelta(days=31)
+
+    results = News.objects.filter(
+        created_at__gte=delta).order_by('-created_at')
+
+    context.update({'news': results})
 
     return render(request, "panel/news.html", context)
 
