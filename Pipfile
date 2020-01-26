@@ -8,8 +8,8 @@ verify_ssl = true
 [packages]
 django = "==3.0"
 django-crispy-forms = "*"
-django-summernot = "*"
 django-summernote = "*"
+ansible = "*"
 
 [requires]
 python_version = "3.8"
