@@ -28,3 +28,9 @@ class News(models.Model):
     title = models.CharField(max_length=255)
     created_at = models.DateTimeField()
     content = models.TextField()
+
+
+class GeneralSettings(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    key = models.CharField(max_length=255, unique=True)
+    value = models.CharField(max_length=1255)

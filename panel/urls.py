@@ -32,4 +32,7 @@ urlpatterns = [
     # User handling URLs
     path('login/', views.login_view, name='login_view'),
     path('logout/', views.logout_view, name='logout_view'),
+
+    # System related URLs
+    path('sys/nat/', views.nat, name='nat'),
 ]

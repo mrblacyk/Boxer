@@ -5,11 +5,14 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import HttpResponse
+from django.template.loader import render_to_string
 from time import sleep
-from .models import Messages, News
-from .forms import MailComposeForm, NewsForm
+from .models import Messages, News, GeneralSettings
+from .forms import MailComposeForm, NewsForm, NatForm
 from datetime import datetime, timedelta
 import json
+from socket import if_nameindex, if_indextoname
+from netaddr import IPNetwork
 
 # Create your views here.
 
@@ -17,7 +20,6 @@ import json
 @login_required
 def index(request):
     context = {}
-    context.update({'username': request.user.username})
 
     return render(request, "panel/statistics.html", context)
 
@@ -25,7 +27,6 @@ def index(request):
 @login_required
 def news(request):
     context = {}
-    context.update({'username': request.user.username})
 
     delta = datetime.now() - timedelta(days=31)
 
@@ -281,3 +282,105 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return render(request, "panel/login.html", {})
+
+
+def nat(request):
+    if request.method == "POST" \
+            and not GeneralSettings.objects.filter(key="NETWORK_CONFIGURED"):
+        form = NatForm(request.POST, interfaces=if_nameindex())
+        if form.is_valid():
+            # if_indextoname(1) -> name of the network
+            ip_network = form.cleaned_data.get('ip_network')
+            interface_index = form.cleaned_data.get('interface')
+
+            netmask = str(IPNetwork(ip_network).netmask)
+            interface_name = if_indextoname(int(interface_index))
+            network_name = form.cleaned_data.get('network_name')
+            bridge_name = form.cleaned_data.get('bridge_name')
+            host_ip = form.cleaned_data.get('host_ip')
+            dhcp_start = form.cleaned_data.get('dhcp_start')
+            dhcp_end = form.cleaned_data.get('dhcp_end')
+
+            result_dict = {
+                'netmask': netmask,
+                'ifname': interface_name,
+                'net_name': network_name,
+                'gateway': bridge_name,
+                'host_ip': host_ip,
+                'dhcp_start': dhcp_start,
+                'dhcp_end': dhcp_end,
+            }
+
+            # Copy template and fill it
+            nat_virsh_file = render_to_string(
+                "nat.xml",
+                result_dict
+            )
+
+            print(nat_virsh_file)
+
+            # with open("/tmp/test.xml", "w") as f:
+            #     f.write(nat_virsh_file)
+
+            for key, value in result_dict.items():
+                full_key = 'NETWORK_CONFIGURATION_' + key.upper()
+                if GeneralSettings.objects.filter(key=full_key):
+                    tmp = GeneralSettings.objects.get(key=full_key)
+                else:
+                    tmp = GeneralSettings()
+                    tmp.key = full_key
+                tmp.value = value
+                tmp.save()
+                del tmp
+
+            tmp = GeneralSettings()
+            tmp.key = "NETWORK_CONFIGURED"
+            tmp.value = True
+            tmp.save()
+            del tmp
+            return redirect("/sys/nat/")
+    elif GeneralSettings.objects.filter(key="NETWORK_CONFIGURED"):
+        net_config_dict = {
+            'netmask': None,
+            'ifname': None,
+            'net_name': None,
+            'gateway': None,
+            'host_ip': None,
+            'dhcp_start': None,
+            'dhcp_end': None,
+        }
+        if request.method == "POST":
+            if request.POST.get('delete', '') == 'config':
+                config_keys = [
+                    'netmask',
+                    'ifname',
+                    'net_name',
+                    'gateway',
+                    'host_ip',
+                    'dhcp_start',
+                    'dhcp_end',
+                ]
+                for key in config_keys:
+                    net_config_dict[key] = GeneralSettings.objects.get(
+                        key="NETWORK_CONFIGURATION_" + key.upper()
+                    ).delete()
+
+                GeneralSettings.objects.get(
+                    key="NETWORK_CONFIGURED").delete()
+            return redirect("/sys/nat/")
+        else:
+            for key in net_config_dict.keys():
+                net_config_dict[key] = GeneralSettings.objects.filter(
+                    key="NETWORK_CONFIGURATION_" + key.upper()
+                )[0].value
+
+            return render(
+                request,
+                "panel/nat.html",
+                {
+                    'form': None,
+                    'net_config': net_config_dict,
+                }
+            )
+    form = NatForm(interfaces=if_nameindex())
+    return render(request, "panel/nat.html", {'form': form})

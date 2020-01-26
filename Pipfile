@@ -10,6 +10,7 @@ django = "==3.0"
 django-crispy-forms = "*"
 django-summernote = "*"
 ansible = "*"
+netaddr = "*"
 
 [requires]
 python_version = "3.8"
