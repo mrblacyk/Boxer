@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from time import sleep
 from .models import Messages, News, GeneralSettings
-from .forms import MailComposeForm, NewsForm, NatForm
+from .forms import MailComposeForm, NewsForm, NatForm, DeployVMForm
 from datetime import datetime, timedelta
 import json
 from socket import if_nameindex, if_indextoname
@@ -376,9 +376,6 @@ def nat(request):
                 )
                 return redirect("/sys/nat/")
 
-            # with open("/tmp/test.xml", "w") as f:
-            #     f.write(nat_virsh_file)
-
             for key, value in result_dict.items():
                 full_key = 'NETWORK_CONFIGURATION_' + key.upper()
                 if GeneralSettings.objects.filter(key=full_key):
@@ -396,6 +393,7 @@ def nat(request):
             tmp.save()
             del tmp
             return redirect("/sys/nat/")
+
     elif GeneralSettings.objects.filter(key="NETWORK_CONFIGURED"):
         net_config_dict = {
             'netmask': None,
@@ -444,4 +442,8 @@ def nat(request):
 
 
 def deploy_vm(request):
-    return render(request, "panel/deploy_vm.html", {})
+    if request.method == "POST":
+        form = DeployVMForm(request.POST)
+    else:
+        form = DeployVMForm()
+    return render(request, "panel/deploy_vm.html", {'form': form})

@@ -3,6 +3,17 @@ from django_summernote.widgets import SummernoteWidget
 from socket import if_nameindex
 from netaddr import IPAddress, IPNetwork
 from netaddr.core import AddrFormatError
+from subprocess import PIPE, run as s_run
+
+
+def callCmd(command):
+    """ Returns stdout, stderr and returncode"""
+    if not isinstance(command, list):
+        raise Exception("Command has to be a list")
+    cmd = s_run(
+        command, stdout=PIPE, stderr=PIPE
+    )
+    return cmd.stdout.decode(), cmd.stderr.decode(), cmd.returncode
 
 
 class MailComposeForm(forms.Form):
@@ -14,6 +25,43 @@ class MailComposeForm(forms.Form):
 class NewsForm(forms.Form):
     subject = forms.CharField(max_length=255)
     content = forms.CharField(widget=SummernoteWidget())
+
+
+class DeployVMForm(forms.Form):
+    name = forms.CharField(max_length=255, label="VM Name")
+    disk_location = forms.CharField(
+        max_length=255, label="Disk location",
+        help_text="Do not escape spaces or any characters"
+    )
+    vcpu = forms.IntegerField(
+        label="Number of vCPUs", initial=1, min_value=1, max_value=4
+    )
+    memory = forms.IntegerField(
+        label="Memory in MiB", initial=512, min_value=128, max_value=4096
+    )
+    mac_address = forms.CharField(
+        min_length=17, max_length=17, label="Overwrite mac address",
+        help_text="Do <b>NOT</b> fill this field to assign random mac address",
+        required=False
+    )
+
+    def clean(self):
+        self.cleaned_data = super().clean()
+
+        cmd_stdout, cmd_stderr, cmd_code = callCmd(
+            ["qemu-img", "info", self.cleaned_data["disk_location"]]
+        )
+
+        print(cmd_stdout)
+
+        if cmd_code:
+            self.add_error(
+                'disk_location',
+                "STDOUT: " + cmd_stdout + "\nSTDERR: " + cmd_stderr
+            )
+
+        if self.cleaned_data.get("memory", None):
+            pass
 
 
 class NatForm(forms.Form):

@@ -3,5 +3,23 @@
 {% load crispy_forms_tags %}
 
 {% block main_content %}
-deploy vm
+<section class="content">
+<center>
+    {% if form %}
+    <form method="POST" action="/sys/deploy-vm/">
+        <div class="card card-primary card-outline" style="width: 50%">
+              <div class="card-header">
+        {{ form|crispy }}
+        {% csrf_token %}
+    </div>
+        <div class="card-footer">
+          <div class="float-right">
+            <button type="submit" class="btn btn-primary">Deploy</button>
+          </div>
+        </div>
+    </div>
+    </form>
+    {% endif %}
+</center>
+</section>
 {% endblock %}
