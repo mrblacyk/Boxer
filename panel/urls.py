@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     # Dashboards
-    path('statistics/', views.index, name='index'),
+    path('statistics/', views.statistics, name='statistics'),
     path('', views.news, name='news'),
 
     # Machine related URLs
@@ -35,4 +35,5 @@ urlpatterns = [
 
     # System related URLs
     path('sys/nat/', views.nat, name='nat'),
+    path('sys/deploy-vm/', views.deploy_vm, name='deploy_vm'),
 ]

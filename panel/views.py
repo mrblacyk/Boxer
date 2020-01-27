@@ -13,12 +13,24 @@ from datetime import datetime, timedelta
 import json
 from socket import if_nameindex, if_indextoname
 from netaddr import IPNetwork
+from subprocess import PIPE, run as s_run
+from tempfile import NamedTemporaryFile
 
 # Create your views here.
 
 
+def callCmd(command):
+    """ Returns stdout, stderr and returncode"""
+    if not isinstance(command, str):
+        raise Exception("Command has to be a string")
+    cmd = s_run(
+        command.split(), stdout=PIPE, stderr=PIPE
+    )
+    return cmd.stdout.decode(), cmd.stderr.decode(), cmd.returncode
+
+
 @login_required
-def index(request):
+def statistics(request):
     context = {}
 
     return render(request, "panel/statistics.html", context)
@@ -272,7 +284,7 @@ def login_view(request):
                         " <i class='fas fa-crown'></i>"
                     )
                 )
-                return redirect('index')
+                return redirect('news')
             else:
                 messages.error(request, "Invalid username or password")
                 return redirect('login_view')
@@ -316,8 +328,53 @@ def nat(request):
                 "nat.xml",
                 result_dict
             )
+            with NamedTemporaryFile() as fp:
+                fp.write(nat_virsh_file.encode())
 
-            print(nat_virsh_file)
+                cmd_stdout, cmd_stderr, cmd_code = callCmd(
+                    "virsh net-define " + fp.name
+                )
+
+                if cmd_code and (
+                        "defined" not in cmd_stdout or
+                        "defined" not in cmd_stderr):
+                    messages.error(
+                        request,
+                        "Error occured during network definition: <br/><br/>" +
+                        fp.name + "<br/>STDOUT:<br/>" +
+                        cmd_stdout.replace("\n", "<br/>") +
+                        "<br/>STDERR:<br/>" +
+                        cmd_stderr.replace("\n", "<br/>")
+                    )
+                    return redirect("/sys/nat/")
+
+            cmd_stdout, cmd_stderr, cmd_code = callCmd(
+                "virsh net-start " + network_name
+            )
+            if cmd_code:
+                messages.error(
+                    request,
+                    "Error occured during start of the network: <br/><br/>" +
+                    "<br/>STDOUT:<br/>" +
+                    cmd_stdout.replace("\n", "<br/>") +
+                    "<br/>STDERR:<br/>" +
+                    cmd_stderr.replace("\n", "<br/>")
+                )
+                return redirect("/sys/nat/")
+            cmd_stdout, cmd_stderr, cmd_code = callCmd(
+                "virsh net-autostart " + network_name
+            )
+            if cmd_code:
+                messages.error(
+                    request,
+                    "Error occured during setting autostart of " +
+                    "the network: <br/><br/>" +
+                    "<br/>STDOUT:<br/>" +
+                    cmd_stdout.replace("\n", "<br/>") +
+                    "<br/>STDERR:<br/>" +
+                    cmd_stderr.replace("\n", "<br/>")
+                )
+                return redirect("/sys/nat/")
 
             # with open("/tmp/test.xml", "w") as f:
             #     f.write(nat_virsh_file)
@@ -384,3 +441,7 @@ def nat(request):
             )
     form = NatForm(interfaces=if_nameindex())
     return render(request, "panel/nat.html", {'form': form})
+
+
+def deploy_vm(request):
+    return render(request, "panel/deploy_vm.html", {})
