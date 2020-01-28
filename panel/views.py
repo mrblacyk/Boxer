@@ -629,9 +629,11 @@ def deploy_vm(request):
                     # If success
                     prefix_key = "DEPLOYED_VM_"
 
-                    already_existing = [[y for y in x.key.split("_")[2]] for
-                                        GeneralSettings.objects.filter(
-                        key__regex="DEPLOYED_VM_.*_NAME").order_by("-key")][:1]
+                    already_existing = [
+                        [y for y in x.key.split("_")[2]] for x
+                        in GeneralSettings.objects.filter(
+                            key__regex='DEPLOYED_VM_.*_NAME').order_by(
+                            "-key")][:1]
 
                     if already_existing:
                         new_id = int(already_existing[-1][0]) + 1
@@ -645,6 +647,28 @@ def deploy_vm(request):
                         tmp.key = full_key
                     tmp.value = form.cleaned_data["name"]
                     tmp.save()
+                    del tmp
+
+                    full_key = prefix_key + str(new_id) + "_LEVEL"
+                    if GeneralSettings.objects.filter(key=full_key):
+                        tmp = GeneralSettings.objects.get(key=full_key)
+                    else:
+                        tmp = GeneralSettings()
+                        tmp.key = full_key
+                    tmp.value = form.cleaned_data["level"]
+                    tmp.save()
+                    del tmp
+
+                    full_key = prefix_key + str(new_id) + "_PUBLISHED"
+                    if GeneralSettings.objects.filter(key=full_key):
+                        tmp = GeneralSettings.objects.get(key=full_key)
+                    else:
+                        tmp = GeneralSettings()
+                        tmp.key = full_key
+                    tmp.value = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+                    tmp.save()
+                    del tmp
+
                     messages.success(
                         request,
                         "Successfully deployed VM!")

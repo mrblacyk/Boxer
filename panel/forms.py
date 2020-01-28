@@ -31,6 +31,11 @@ class NewsForm(forms.Form):
 
 class DeployVMForm(forms.Form):
     name = forms.CharField(max_length=255, label="VM Name")
+    level = forms.ChoiceField(
+        label="VM Level",
+        choices=[("easy", "Easy"), ("medium", "Medium"),
+                 ("hard", "Hard"), ("insane", "Insane")]
+    )
     disk_location = forms.CharField(
         max_length=255, label="Disk location",
         help_text="Do not escape spaces or any characters"
