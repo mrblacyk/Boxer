@@ -4,6 +4,8 @@ from socket import if_nameindex
 from netaddr import IPAddress, IPNetwork
 from netaddr.core import AddrFormatError
 from subprocess import PIPE, run as s_run
+from re import search as search_regex
+from random import randrange
 
 
 def callCmd(command):
@@ -44,6 +46,25 @@ class DeployVMForm(forms.Form):
         help_text="Do <b>NOT</b> fill this field to assign random mac address",
         required=False
     )
+    network = forms.ChoiceField(label="Virsh Network")
+
+    def __init__(self, *args, **kwargs):
+        nonexist = ("non-exising", "Select..")
+        if 'networks' in kwargs.keys():
+            networks = []
+            networks_tmp = kwargs.pop('networks')
+            for a, b, c in networks_tmp:
+                networks.append([a, " | ".join([
+                    "Name: " + a,
+                    b,
+                    "Is running: " + c
+                ])])
+            networks.append(nonexist)
+        else:
+            networks = [nonexist, ]
+        super().__init__(*args, **kwargs)
+        self.fields["network"].choices = networks
+        self.fields["network"].initial = nonexist
 
     def clean(self):
         self.cleaned_data = super().clean()
@@ -52,16 +73,25 @@ class DeployVMForm(forms.Form):
             ["qemu-img", "info", self.cleaned_data["disk_location"]]
         )
 
-        print(cmd_stdout)
-
         if cmd_code:
             self.add_error(
                 'disk_location',
                 "STDOUT: " + cmd_stdout + "\nSTDERR: " + cmd_stderr
             )
+        else:
+            self.cleaned_data["disk_type"] = search_regex(
+                "(?<=file format:\s)(.*)", cmd_stdout).group(0)
 
-        if self.cleaned_data.get("memory", None):
-            pass
+        if not self.cleaned_data.get("mac_address", None):
+            # Generate random mac address
+            self.cleaned_data["mac_address"] = ":".join(
+                ['%02x' % randrange(256) for _ in range(6)])
+        elif not search_regex(
+            '^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$',
+                self.cleaned_data["mac_address"]):
+            self.add_error('mac_address', "Invalid mac address")
+
+        self.cleaned_data["memory"] *= 1024
 
 
 class NatForm(forms.Form):
@@ -78,7 +108,7 @@ class NatForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         nonexist = ("non-exising", "Select..")
-        if kwargs.get('interfaces'):
+        if 'interfaces' in kwargs.keys():
             interfaces = kwargs.pop('interfaces')
             interfaces.append(nonexist)
         else:

@@ -442,8 +442,59 @@ def nat(request):
 
 
 def deploy_vm(request):
-    if request.method == "POST":
-        form = DeployVMForm(request.POST)
+    cmd_stdout = """Name                 State      Autostart
+-----------------------------------------
+default              active     yes
+alpha-nat       inactive   no"""
+    cmd_code = 1
+
+    # cmd_stdout, cmd_stderr, cmd_code = callCmd(
+    #     "virsh net-list --all "
+    # )
+
+    if cmd_code:
+        virsh_networks = [x.split() for x in cmd_stdout.split("\n")[2:]]
     else:
-        form = DeployVMForm()
+        messages.error(request, "Could not retrieve virsh networks")
+        virsh_networks = []
+
+    if request.method == "POST":
+        form = DeployVMForm(request.POST, networks=virsh_networks)
+        if form.is_valid():
+            result_dict = {
+                'vm_name': form.cleaned_data["name"],
+                'vm_memory_in_mib': form.cleaned_data["memory"],
+                'vm_vcpu_number': form.cleaned_data["vcpu"],
+                'vm_disk_type': form.cleaned_data["disk_type"],
+                'vm_disk_location': form.cleaned_data["disk_location"],
+                'vm_mac_address': form.cleaned_data["mac_address"],
+                'vm_network_name': form.cleaned_data["network"],
+            }
+            print(result_dict)
+            # Copy template and fill it
+            vm_virsh_file = render_to_string(
+                "vm.xml",
+                result_dict
+            )
+            with NamedTemporaryFile() as fp:
+                fp.write(vm_virsh_file.encode())
+                cmd_stdout, cmd_stderr, cmd_code = callCmd(
+                    "virsh create " + fp.name
+                )
+                if not cmd_code:
+                    messages.success(
+                        request,
+                        "Successfully deployed VM!")
+                    return redirect("/machines/")
+                else:
+                    messages.error(
+                        request,
+                        (
+                            "Error during a deployment. <br/>"
+                            "STDOUT: " + cmd_stdout + "<br/>"
+                            "STDERR: " + cmd_stderr + "<br/>"
+                        )
+                    )
+    else:
+        form = DeployVMForm(networks=virsh_networks)
     return render(request, "panel/deploy_vm.html", {'form': form})
