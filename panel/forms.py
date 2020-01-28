@@ -52,7 +52,7 @@ class DeployVMForm(forms.Form):
         nonexist = ("non-exising", "Select..")
         if 'networks' in kwargs.keys():
             networks = []
-            networks_tmp = kwargs.pop('networks')
+            networks_tmp = [x for x in kwargs.pop('networks') if len(x) == 4]
             for a, b, c in networks_tmp:
                 networks.append([a, " | ".join([
                     "Name: " + a,
@@ -90,8 +90,6 @@ class DeployVMForm(forms.Form):
             '^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$',
                 self.cleaned_data["mac_address"]):
             self.add_error('mac_address', "Invalid mac address")
-
-        self.cleaned_data["memory"] *= 1024
 
 
 class NatForm(forms.Form):

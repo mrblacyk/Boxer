@@ -330,6 +330,7 @@ def nat(request):
             )
             with NamedTemporaryFile() as fp:
                 fp.write(nat_virsh_file.encode())
+                fp.flush()
 
                 cmd_stdout, cmd_stderr, cmd_code = callCmd(
                     "virsh net-define " + fp.name
@@ -442,15 +443,10 @@ def nat(request):
 
 
 def deploy_vm(request):
-    cmd_stdout = """Name                 State      Autostart
------------------------------------------
-default              active     yes
-alpha-nat       inactive   no"""
-    cmd_code = 1
 
-    # cmd_stdout, cmd_stderr, cmd_code = callCmd(
-    #     "virsh net-list --all "
-    # )
+    cmd_stdout, cmd_stderr, cmd_code = callCmd(
+        "virsh net-list --all "
+    )
 
     if cmd_code:
         virsh_networks = [x.split() for x in cmd_stdout.split("\n")[2:]]
@@ -478,6 +474,7 @@ alpha-nat       inactive   no"""
             )
             with NamedTemporaryFile() as fp:
                 fp.write(vm_virsh_file.encode())
+                fp.flush()
                 cmd_stdout, cmd_stderr, cmd_code = callCmd(
                     "virsh create " + fp.name
                 )
