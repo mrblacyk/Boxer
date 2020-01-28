@@ -58,11 +58,12 @@ class DeployVMForm(forms.Form):
         if 'networks' in kwargs.keys():
             networks = []
             networks_tmp = [x for x in kwargs.pop('networks') if len(x) == 4]
-            for a, b, c in networks_tmp:
+            for a, b, c, d in networks_tmp:
                 networks.append([a, " | ".join([
                     "Name: " + a,
                     b,
-                    "Is running: " + c
+                    "Autostart: " + c,
+                    "Running: " + d
                 ])])
             networks.append(nonexist)
         else:

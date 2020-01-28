@@ -234,25 +234,25 @@ def machines(request):
         if vm:
             vm_id = int(vm.key.split("_")[2])
         vm_level = GeneralSettings.objects.filter(
-            key="DEPLOYED_VM_{vm_id}_LEVEL")
+            key=f"DEPLOYED_VM_{vm_id}_LEVEL")
         if vm_level:
             vm_level_value = vm_level.value
         else:
             vm_level_value = "ERROR!"
         vm_publish = GeneralSettings.objects.filter(
-            key="DEPLOYED_VM_{vm_id}_PUBLISHED")
+            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")
         if vm_publish:
             vm_publish_value = vm_publish.value
         else:
             vm_publish_value = "ERROR!"
         if GeneralSettings.objects.filter(
-                key="DEPLOYED_VM_{vm_id}_USER_{user_name}"):
+                key=f"DEPLOYED_VM_{vm_id}_USER_{user_name}"):
             user_flag = True
         else:
             user_flag = False
 
         if GeneralSettings.objects.filter(
-                key="DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
+                key=f"DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
             root_flag = True
         else:
             root_flag = False
@@ -282,25 +282,25 @@ def machines(request):
         if vm:
             vm_id = int(vm.key.split("_")[2])
         vm_level = GeneralSettings.objects.filter(
-            key="DEPLOYED_VM_{vm_id}_LEVEL")
+            key=f"DEPLOYED_VM_{vm_id}_LEVEL")
         if vm_level:
             vm_level_value = vm_level.value
         else:
             vm_level_value = "ERROR!"
         vm_publish = GeneralSettings.objects.filter(
-            key="DEPLOYED_VM_{vm_id}_PUBLISHED")
+            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")
         if vm_publish:
             vm_publish_value = vm_publish.value
         else:
             vm_publish_value = "ERROR!"
         if GeneralSettings.objects.filter(
-                key="DEPLOYED_VM_{vm_id}_USER_{user_name}"):
+                key=f"DEPLOYED_VM_{vm_id}_USER_{user_name}"):
             user_flag = True
         else:
             user_flag = False
 
         if GeneralSettings.objects.filter(
-                key="DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
+                key=f"DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
             root_flag = True
         else:
             root_flag = False
@@ -330,25 +330,25 @@ def machines(request):
         if vm:
             vm_id = int(vm.key.split("_")[2])
         vm_level = GeneralSettings.objects.filter(
-            key="DEPLOYED_VM_{vm_id}_LEVEL")
+            key=f"DEPLOYED_VM_{vm_id}_LEVEL")
         if vm_level:
             vm_level_value = vm_level.value
         else:
             vm_level_value = "ERROR!"
         vm_publish = GeneralSettings.objects.filter(
-            key="DEPLOYED_VM_{vm_id}_PUBLISHED")
+            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")
         if vm_publish:
             vm_publish_value = vm_publish.value
         else:
             vm_publish_value = "ERROR!"
         if GeneralSettings.objects.filter(
-                key="DEPLOYED_VM_{vm_id}_USER_{user_name}"):
+                key=f"DEPLOYED_VM_{vm_id}_USER_{user_name}"):
             user_flag = True
         else:
             user_flag = False
 
         if GeneralSettings.objects.filter(
-                key="DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
+                key=f"DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
             root_flag = True
         else:
             root_flag = False
@@ -378,25 +378,25 @@ def machines(request):
         if vm:
             vm_id = int(vm.key.split("_")[2])
         vm_level = GeneralSettings.objects.filter(
-            key="DEPLOYED_VM_{vm_id}_LEVEL")
+            key=f"DEPLOYED_VM_{vm_id}_LEVEL")
         if vm_level:
             vm_level_value = vm_level.value
         else:
             vm_level_value = "ERROR!"
         vm_publish = GeneralSettings.objects.filter(
-            key="DEPLOYED_VM_{vm_id}_PUBLISHED")
+            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")
         if vm_publish:
             vm_publish_value = vm_publish.value
         else:
             vm_publish_value = "ERROR!"
         if GeneralSettings.objects.filter(
-                key="DEPLOYED_VM_{vm_id}_USER_{user_name}"):
+                key=f"DEPLOYED_VM_{vm_id}_USER_{user_name}"):
             user_flag = True
         else:
             user_flag = False
 
         if GeneralSettings.objects.filter(
-                key="DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
+                key=f"DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
             root_flag = True
         else:
             root_flag = False
