@@ -212,56 +212,203 @@ def mailbox_user_query(request):
 
 @login_required
 def machines(request):
+
     context = {}
     context.update({'machines': []})
-    context['machines'].append({
-        'name': 'First',
-        'level': 'Easy',
-        'status': 'RUNNING',
-        'publish_date': '01.01.2020',
-        'user': False, 'root': False,
-        'id': 1,
-    })
-    context['machines'].append({
-        'name': 'Second',
-        'level': 'Medium',
-        'status': 'STOPPED',
-        'publish_date': '01.01.2020',
-        'user': True, 'root': False,
-        'id': 2,
-    })
-    context['machines'].append({
-        'name': 'Third',
-        'level': 'Easy',
-        'status': 'STOPPED',
-        'publish_date': '01.01.2020',
-        'user': True, 'root': True,
-        'id': 3,
-    })
-    context['machines'].append({
-        'name': 'Fourth',
-        'level': 'Hard',
-        'status': 'RUNNING',
-        'publish_date': '01.01.2020',
-        'user': False, 'root': True,
-        'id': 4,
-    })
-    context['machines'].append({
-        'name': 'Fifth',
-        'level': 'Easy',
-        'status': 'SCHEDULED FOR A RESET',
-        'publish_date': '01.01.2020',
-        'user': False, 'root': False,
-        'id': 5,
-    })
-    context['machines'].append({
-        'name': 'Sixth',
-        'level': 'Medium',
-        'status': 'BROKEN BY KURASKOV',
-        'publish_date': '01.01.2020',
-        'user': True, 'root': False,
-        'id': 6,
-    })
+
+    user_name = request.user.username.replace(" ", "").upper()
+
+    # Running state
+
+    cmd_stdout, cmd_stderr, cmd_code = callCmd(
+        "virsh list --all --state-running --name"
+    )
+
+    if cmd_code:
+        messages.error(request, "Failed to retrieve running VMs")
+    else:
+        cmd_stdout = cmd_stdout.strip().split("\n")
+
+    for vm_name in cmd_stdout:
+        vm = GeneralSettings.objects.filter(value=vm_name)
+        if vm:
+            vm_id = int(vm.key.split("_")[2])
+        vm_level = GeneralSettings.objects.filter(
+            key="DEPLOYED_VM_{vm_id}_LEVEL")
+        if vm_level:
+            vm_level_value = vm_level.value
+        else:
+            vm_level_value = "ERROR!"
+        vm_publish = GeneralSettings.objects.filter(
+            key="DEPLOYED_VM_{vm_id}_PUBLISHED")
+        if vm_publish:
+            vm_publish_value = vm_publish.value
+        else:
+            vm_publish_value = "ERROR!"
+        if GeneralSettings.objects.filter(
+                key="DEPLOYED_VM_{vm_id}_USER_{user_name}"):
+            user_flag = True
+        else:
+            user_flag = False
+
+        if GeneralSettings.objects.filter(
+                key="DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
+            root_flag = True
+        else:
+            root_flag = False
+
+        context['machines'].append({
+            'name': vm_name,
+            'level': vm_level_value,
+            'status': 'RUNNING',
+            'publish_date': vm_publish_value,
+            'user': user_flag, 'root': root_flag,
+            'id': vm_id,
+        })
+
+    # Stopped state
+
+    cmd_stdout, cmd_stderr, cmd_code = callCmd(
+        "virsh list --all --state-shutoff --name"
+    )
+
+    if cmd_code:
+        messages.error(request, "Failed to retrieve running VMs")
+    else:
+        cmd_stdout = cmd_stdout.strip().split("\n")
+
+    for vm_name in cmd_stdout:
+        vm = GeneralSettings.objects.filter(value=vm_name)
+        if vm:
+            vm_id = int(vm.key.split("_")[2])
+        vm_level = GeneralSettings.objects.filter(
+            key="DEPLOYED_VM_{vm_id}_LEVEL")
+        if vm_level:
+            vm_level_value = vm_level.value
+        else:
+            vm_level_value = "ERROR!"
+        vm_publish = GeneralSettings.objects.filter(
+            key="DEPLOYED_VM_{vm_id}_PUBLISHED")
+        if vm_publish:
+            vm_publish_value = vm_publish.value
+        else:
+            vm_publish_value = "ERROR!"
+        if GeneralSettings.objects.filter(
+                key="DEPLOYED_VM_{vm_id}_USER_{user_name}"):
+            user_flag = True
+        else:
+            user_flag = False
+
+        if GeneralSettings.objects.filter(
+                key="DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
+            root_flag = True
+        else:
+            root_flag = False
+
+        context['machines'].append({
+            'name': vm_name,
+            'level': vm_level_value,
+            'status': 'STOPPED',
+            'publish_date': vm_publish_value,
+            'user': user_flag, 'root': root_flag,
+            'id': vm_id,
+        })
+
+    # Paused state
+
+    cmd_stdout, cmd_stderr, cmd_code = callCmd(
+        "virsh list --all --state-paused --name"
+    )
+
+    if cmd_code:
+        messages.error(request, "Failed to retrieve running VMs")
+    else:
+        cmd_stdout = cmd_stdout.strip().split("\n")
+
+    for vm_name in cmd_stdout:
+        vm = GeneralSettings.objects.filter(value=vm_name)
+        if vm:
+            vm_id = int(vm.key.split("_")[2])
+        vm_level = GeneralSettings.objects.filter(
+            key="DEPLOYED_VM_{vm_id}_LEVEL")
+        if vm_level:
+            vm_level_value = vm_level.value
+        else:
+            vm_level_value = "ERROR!"
+        vm_publish = GeneralSettings.objects.filter(
+            key="DEPLOYED_VM_{vm_id}_PUBLISHED")
+        if vm_publish:
+            vm_publish_value = vm_publish.value
+        else:
+            vm_publish_value = "ERROR!"
+        if GeneralSettings.objects.filter(
+                key="DEPLOYED_VM_{vm_id}_USER_{user_name}"):
+            user_flag = True
+        else:
+            user_flag = False
+
+        if GeneralSettings.objects.filter(
+                key="DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
+            root_flag = True
+        else:
+            root_flag = False
+
+        context['machines'].append({
+            'name': vm_name,
+            'level': vm_level_value,
+            'status': 'PAUSED',
+            'publish_date': vm_publish_value,
+            'user': user_flag, 'root': root_flag,
+            'id': vm_id,
+        })
+
+    # Other state
+
+    cmd_stdout, cmd_stderr, cmd_code = callCmd(
+        "virsh list --all --state-other --name"
+    )
+
+    if cmd_code:
+        messages.error(request, "Failed to retrieve running VMs")
+    else:
+        cmd_stdout = cmd_stdout.strip().split("\n")
+
+    for vm_name in cmd_stdout:
+        vm = GeneralSettings.objects.filter(value=vm_name)
+        if vm:
+            vm_id = int(vm.key.split("_")[2])
+        vm_level = GeneralSettings.objects.filter(
+            key="DEPLOYED_VM_{vm_id}_LEVEL")
+        if vm_level:
+            vm_level_value = vm_level.value
+        else:
+            vm_level_value = "ERROR!"
+        vm_publish = GeneralSettings.objects.filter(
+            key="DEPLOYED_VM_{vm_id}_PUBLISHED")
+        if vm_publish:
+            vm_publish_value = vm_publish.value
+        else:
+            vm_publish_value = "ERROR!"
+        if GeneralSettings.objects.filter(
+                key="DEPLOYED_VM_{vm_id}_USER_{user_name}"):
+            user_flag = True
+        else:
+            user_flag = False
+
+        if GeneralSettings.objects.filter(
+                key="DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
+            root_flag = True
+        else:
+            root_flag = False
+
+        context['machines'].append({
+            'name': vm_name,
+            'level': vm_level_value,
+            'status': 'UNKNOWN STATE',
+            'publish_date': vm_publish_value,
+            'user': user_flag, 'root': root_flag,
+            'id': vm_id,
+        })
 
     return render(request, "panel/machines.html", context)
 
@@ -445,7 +592,7 @@ def nat(request):
 def deploy_vm(request):
 
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "virsh net-list --all "
+        "virsh net-list --all"
     )
 
     if cmd_code:
@@ -479,6 +626,25 @@ def deploy_vm(request):
                     "virsh create " + fp.name
                 )
                 if not cmd_code:
+                    # If success
+                    prefix_key = "DEPLOYED_VM_"
+
+                    already_existing = [[y for y in x.key.split("_")[2]] for
+                                        GeneralSettings.objects.filter(
+                        key__regex="DEPLOYED_VM_.*_NAME").order_by("-key")][:1]
+
+                    if already_existing:
+                        new_id = int(already_existing[-1][0]) + 1
+                    else:
+                        new_id = 1
+                    full_key = prefix_key + str(new_id) + "_NAME"
+                    if GeneralSettings.objects.filter(key=full_key):
+                        tmp = GeneralSettings.objects.get(key=full_key)
+                    else:
+                        tmp = GeneralSettings()
+                        tmp.key = full_key
+                    tmp.value = form.cleaned_data["name"]
+                    tmp.save()
                     messages.success(
                         request,
                         "Successfully deployed VM!")
