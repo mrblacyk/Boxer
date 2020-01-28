@@ -306,7 +306,7 @@ def nat(request):
             interface_index = form.cleaned_data.get('interface')
 
             netmask = str(IPNetwork(ip_network).netmask)
-            interface_name = if_indextoname(int(interface_index))
+            gateway_interface = if_indextoname(int(interface_index))
             network_name = form.cleaned_data.get('network_name')
             bridge_name = form.cleaned_data.get('bridge_name')
             host_ip = form.cleaned_data.get('host_ip')
@@ -315,9 +315,9 @@ def nat(request):
 
             result_dict = {
                 'netmask': netmask,
-                'ifname': interface_name,
+                'ifname': bridge_name,
                 'net_name': network_name,
-                'gateway': bridge_name,
+                'gateway': gateway_interface,
                 'host_ip': host_ip,
                 'dhcp_start': dhcp_start,
                 'dhcp_end': dhcp_end,
