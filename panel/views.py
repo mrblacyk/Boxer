@@ -10,11 +10,14 @@ from time import sleep
 from .models import *
 from .forms import MailComposeForm, NewsForm, NatForm, DeployVMForm
 from datetime import datetime, timedelta
-import json
 from socket import if_nameindex, if_indextoname
 from netaddr import IPNetwork
 from subprocess import PIPE, run as s_run
 from tempfile import NamedTemporaryFile
+from netaddr import IPAddress
+from _thread import start_new_thread
+
+import json
 
 # Create your views here.
 
@@ -55,6 +58,12 @@ def start_machine(request, machine_id):
     # sd
     sleep(1)
     if request.method == "GET":
+        cmd_stdout, cmd_stderr, cmd_code = callCmd(
+        "sudo virsh list --all --name"
+        )
+
+        if cmd_code:
+            pass
         # Started
         return HttpResponse(status=241)
         # Already started
@@ -287,10 +296,15 @@ def machines(request):
         else:
             root_flag = False
 
+        if not vm.deployed:
+            status = "DEPLOYING.."
+        else:
+            status = context['machines-state'].get(vm.name, None) or "UNKNOWN"
+
         context['machines'].append({
                 'name': vm.name,
                 'level': vm.level,
-                'status': context['machines-state'].get(vm.name, None) or "UNKNOWN",
+                'status': status,
                 'publish_date': vm.published,
                 'user': user_flag, 'root': root_flag,
                 'id': vm.id,
@@ -329,7 +343,7 @@ def logout_view(request):
     logout(request)
     return render(request, "panel/login.html", {})
 
-
+@login_required
 def nat(request):
     if request.method == "POST" \
             and not GeneralSettings.objects.filter(key="NETWORK_CONFIGURED"):
@@ -476,6 +490,29 @@ def nat(request):
     return render(request, "panel/nat.html", {'form': form})
 
 
+def create_snapshot(vm_name):
+        vm = VirtualMachine.objects.get(name=vm_name)
+
+        # Lock to *try* preventing other code to modify VM
+        vm.lock = True
+        vm.save()
+        snapshot_command = f'sudo virsh snapshot-create-as --disk-only {vm.name} INIT'
+
+        cmd_stdout, cmd_stderr, cmd_code = callCmd(snapshot_command)
+        if cmd_code:
+            return False
+        else:
+            cmd_stdout, cmd_stderr, cmd_code = callCmd(
+                f'sudo virsh start {vm.name}'
+            )
+            vm.lock = False
+            vm.deployed = True
+            vm.save()
+
+        return redirect('/machines/')
+
+
+@login_required
 def deploy_vm(request):
 
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
@@ -500,17 +537,36 @@ def deploy_vm(request):
                 'vm_mac_address': form.cleaned_data["mac_address"],
                 'vm_network_name': form.cleaned_data["network"],
             }
-            print(result_dict)
             # Copy template and fill it
             vm_virsh_file = render_to_string(
                 "vm.xml",
                 result_dict
             )
+            print("valid form")
             with NamedTemporaryFile() as fp:
                 fp.write(vm_virsh_file.encode())
                 fp.flush()
+                vm_len = VirtualMachine.objects.count()
+                end_dhcp = GeneralSettings.objects.get(key="NETWORK_CONFIGURATION_DHCP_END")
+                start_dhcp = GeneralSettings.objects.get(key="NETWORK_CONFIGURATION_DHCP_START")
+                end_dhcp = IPAddress(end_dhcp.value)
+                start_dhcp = IPAddress(start_dhcp.value)
+                available_pool = int(end_dhcp - start_dhcp)
+                if vm_len >= available_pool:
+                    request.error(request, "No IPs avaialble")
+                    return redirect("/sys/deploy-vm/")
+                ip_addr = str(start_dhcp + vm_len)
+                mac_addr = form.cleaned_data["mac_address"]
+                network_name = form.cleaned_data["network"]
+                add_ip_cmd = "sudo virsh net-update %s add-last ip-dhcp-host --xml \"<host mac='%s' ip='%s'/>\" --live --config" % (network_name, mac_addr, ip_addr)
+                print(add_ip_cmd)
+                cmd_stdout, cmd_stderr, cmd_code = callCmd(add_ip_cmd)
+
+                if cmd_code:
+                    messages.warning(request, "Failed to assign static IP. Expect DHCP assigned IP.")
+
                 cmd_stdout, cmd_stderr, cmd_code = callCmd(
-                    "sudo virsh create " + fp.name
+                    "sudo virsh define " + fp.name
                 )
                 if not cmd_code:
                     vm = VirtualMachine()
@@ -522,11 +578,13 @@ def deploy_vm(request):
                     vm.disk_location = form.cleaned_data["disk_location"]
                     vm.mac_address = form.cleaned_data["mac_address"]
                     vm.network_name = form.cleaned_data["network"]
+                    vm.ip_addr = ip_addr
                     vm.save()
 
                     messages.success(
                         request,
-                        "Successfully deployed VM!")
+                        "Successfully deployed VM!<br>Snapshoting in the background.")
+                    start_new_thread(create_snapshot, (vm.name, ))
                     return redirect("/machines/")
                 else:
                     messages.error(

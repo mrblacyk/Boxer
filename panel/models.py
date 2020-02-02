@@ -63,6 +63,9 @@ class VirtualMachine(models.Model):
     published = models.DateTimeField(editable=False)
     user_owned = models.ManyToManyField(User, blank=True, related_name="user_owned", editable=False)
     root_owned = models.ManyToManyField(User, blank=True, related_name="root_owned", editable=False)
+    ip_addr = models.GenericIPAddressField()
+    deployed = models.BooleanField(default=False)
+    lock = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

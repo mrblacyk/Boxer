@@ -53,7 +53,7 @@
                         <td>
                             <i class="fas fa-user" style="{% if machine.user %}color: darkblue;{% else %}opacity: 0.3{% endif %}" id="user-{{ machine.id }}"></i> <i class="fas fa-user-secret" style="{% if machine.root %}color: #be0000;{% else %}opacity: 0.3{% endif %};" id="root-{{ machine.id }}"></i>
                         </td>
-                        <td class="project-state" id="machine-state-{{ machine.id }}">
+                        <td class="project-state" id="machine1-state-{{ machine.id }}">
                           {% if machine.status == 'RUNNING' %}
                             <span class="badge badge-success">{{ machine.status }}</span>
                           {% elif machine.status == 'STOPPED' %}
@@ -66,19 +66,19 @@
 
                         </td>
                         <td class="project-actions text-right">
-                            <button class="btn btn-success btn-sm" id="machine-start-{{ machine.id }}" {% if machine.status != 'STOPPED' %}disabled=disabled{% endif %}>
+                            <button class="btn btn-success btn-sm" data-id="{{ machine.id }}" id="machine-start-{{ machine.id }}" {% if machine.status != 'STOPPED' or machine.status == 'UNKNOWN' or machine.status == 'DEPLOYING..'  %}disabled=disabled{% endif %}>
                                 <i class="fas fa-play">
                                 </i>
                             </button>
-                            <button class="btn btn-danger btn-sm" id="machine-stop-{{ machine.id }}" {% if machine.status == 'STOPPED' %}disabled=disabled{% endif %}>
+                            <button class="btn btn-danger btn-sm" data-id="{{ machine.id }}" id="machine-stop-{{ machine.id }}" {% if machine.status == 'STOPPED' or machine.status == 'UNKNOWN' or machine.status == 'DEPLOYING..' %}disabled=disabled{% endif %}>
                                 <i class="fas fa-stop">
                                 </i>
                             </button>
-                            <button class="btn btn-warning btn-sm" {% if machine.status == 'SCHEDULED FOR A RESET' %}id="machine-cancel-{{ machine.id }}"{% else %}id="machine-reset-{{ machine.id }}"{% endif %} {% if machine.status == 'STOPPED' %}disabled=disabled{% endif %}>
+                            <button class="btn btn-warning btn-sm" data-id="{{ machine.id }}" {% if machine.status == 'SCHEDULED FOR A RESET' %}id="machine-cancel-{{ machine.id }}"{% else %}id="machine-reset-{{ machine.id }}"{% endif %} {% if machine.status == 'STOPPED' or machine.status == 'UNKNOWN' or machine.status == 'DEPLOYING..' %}disabled=disabled{% endif %}>
                                 {% if machine.status == 'SCHEDULED FOR A RESET' %}<i class="fas fa-ban">{% else %}<i class="fas fa-redo">{% endif %}
                                 </i>
                             </button>
-                            <button class="btn btn-info btn-sm" data-id="{{ machine.id }}" data-toggle="modal" data-target="#flagModal" {% if machine.root and machine.user %}disabled=disabled alt="You already both user and root!"{% endif %}>
+                            <button class="btn btn-info btn-sm" data-id="{{ machine.id }}" data-toggle="modal" data-target="#flagModal" {% if machine.root and machine.user or machine.status == 'UNKNOWN' or machine.status == 'DEPLOYING..' %}disabled=disabled alt="You already both user and root!"{% endif %}>
                                 <i class="fas fa-flag">
                                 </i>
                             </button>
@@ -128,13 +128,14 @@
   $("[id^='machine-']").click(function(){
     var button_object = $(this);
     var button_array = button_object.attr("id").split("-")
+    var machine_id = button_object.data('id')
     button_object.attr("disabled", true);
     var prev_value = button_object.html()
     button_object.html('<div class="spinner-border spinner-border-sm" role="status" style="padding: 0px; margin: 0px;"><span class="sr-only">Loading...</span></div>')
     $.ajax({              
-      url: '/machines/' + button_array[1] + '/' + button_array[2] + '/',
+      url: '/machines/' + button_array[1] + '/' + machine_id + '/',
       error: function(response){
-        $.notify({message: "Failed to " + beautiful_dict[button_array[1]] + " a machine (#" + button_array[2] + ")"},{type: 'danger', offset: {y: 70, x: 20}});
+        $.notify({message: "Failed to " + beautiful_dict[button_array[1]] + " a machine (#" + machine_id + ")"},{type: 'danger', offset: {y: 70, x: 20}});
         button_object.attr("disabled", false);
         button_object.html(prev_value);
       },
@@ -144,58 +145,58 @@
         if (xhr.status == 241) {
           $.notify({message: "Started."},{type: 'success', offset: {y: 70, x: 20}});
           button_object.attr("disabled", true);
-          $("#machine-stop-" + button_array[2]).attr("disabled", false);
-          $("#machine-reset-" + button_array[2]).attr("disabled", false);
-          $("#machine-state-" + button_array[2]).html('<span class="badge badge-success">RUNNING</span>');
+          $("#machine-stop-" + machine_id).attr("disabled", false);
+          $("#machine-reset-" + machine_id).attr("disabled", false);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-success">RUNNING</span>');
         }
         else if (xhr.status == 242) {
           $.notify({message: "Already started!"},{type: 'success', offset: {y: 70, x: 20}});
           button_object.attr("disabled", true);
-          $("#machine-stop-" + button_array[2]).attr("disabled", false);
-          $("#machine-reset-" + button_array[2]).attr("disabled", false);
-          $("#machine-state-" + button_array[2]).html('<span class="badge badge-success">RUNNING</span>');
+          $("#machine-stop-" + machine_id).attr("disabled", false);
+          $("#machine-reset-" + machine_id).attr("disabled", false);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-success">RUNNING</span>');
         }
         else if (xhr.status == 251) {
           $.notify({message: "Stoppped."},{type: 'success', offset: {y: 70, x: 20}});
           button_object.attr("disabled", true);
-          $("#machine-start-" + button_array[2]).attr("disabled", false);
-          $("#machine-cancel-" + button_array[2]).attr('id', "machine-reset-" + button_array[2]);
-          $("#machine-reset-" + button_array[2]).html('<i class="fas fa-redo"></i>');
-          $("#machine-reset-" + button_array[2]).attr("disabled", true);
-          $("#machine-state-" + button_array[2]).html('<span class="badge badge-danger">STOPPED</span>');
+          $("#machine-start-" + machine_id).attr("disabled", false);
+          $("#machine-cancel-" + machine_id).attr('id', "machine-reset-" + machine_id);
+          $("#machine-reset-" + machine_id).html('<i class="fas fa-redo"></i>');
+          $("#machine-reset-" + machine_id).attr("disabled", true);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-danger">STOPPED</span>');
         }
         else if (xhr.status == 252) {
           $.notify({message: "Stopped already!"},{type: 'success', offset: {y: 70, x: 20}});
           button_object.attr("disabled", true);
-          $("#machine-start-" + button_array[2]).attr("disabled", false);
-          $("#machine-cancel-" + button_array[2]).attr('id', "machine-reset-" + button_array[2]);
-          $("#machine-reset-" + button_array[2]).html('<i class="fas fa-redo"></i>');
-          $("#machine-reset-" + button_array[2]).attr("disabled", true);
-          $("#machine-state-" + button_array[2]).html('<span class="badge badge-danger">STOPPED</span>');
+          $("#machine-start-" + machine_id).attr("disabled", false);
+          $("#machine-cancel-" + machine_id).attr('id', "machine-reset-" + machine_id);
+          $("#machine-reset-" + machine_id).html('<i class="fas fa-redo"></i>');
+          $("#machine-reset-" + machine_id).attr("disabled", true);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-danger">STOPPED</span>');
         }
         else if (xhr.status == 261) {
           $.notify({message: "Reset scheduled."},{type: 'success', offset: {y: 70, x: 20}});
           button_object.html('<i class="fas fa-ban"></i>');
-          button_object.attr('id', "machine-cancel-" + button_array[2]);
-          $("#machine-state-" + button_array[2]).html('<span class="badge badge-warning">SCHEDULED FOR A RESET</span>');
+          button_object.attr('id', "machine-cancel-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-warning">SCHEDULED FOR A RESET</span>');
         }
         else if (xhr.status == 262) {
           $.notify({message: "Reset already scheduled!"},{type: 'success', offset: {y: 70, x: 20}});
           button_object.html('<i class="fas fa-ban"></i>');
-          button_object.attr('id', "machine-cancel-" + button_array[2]);
-          $("#machine-state-" + button_array[2]).html('<span class="badge badge-warning">SCHEDULED FOR A RESET</span>');
+          button_object.attr('id', "machine-cancel-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-warning">SCHEDULED FOR A RESET</span>');
         }
         else if (xhr.status == 271) {
           $.notify({message: "Reset canceled."},{type: 'success', offset: {y: 70, x: 20}});
           button_object.html('<i class="fas fa-redo"></i>');
-          button_object.attr('id', "machine-reset-" + button_array[2]);
-          $("#machine-state-" + button_array[2]).html('<span class="badge badge-success">RUNNING</span>');
+          button_object.attr('id', "machine-reset-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-success">RUNNING</span>');
         }
         else if (xhr.status == 272) {
           $.notify({message: "Reset already canceled!"},{type: 'success', offset: {y: 70, x: 20}});
           button_object.html('<i class="fas fa-redo"></i>');
-          button_object.attr('id', "machine-reset-" + button_array[2]);
-          $("#machine-state-" + button_array[2]).html('<span class="badge badge-success">RUNNING</span>');
+          button_object.attr('id', "machine-reset-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-success">RUNNING</span>');
         }
       },
     });
