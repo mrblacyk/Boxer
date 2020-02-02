@@ -19,6 +19,9 @@ class Messages(models.Model):
     read = models.BooleanField(default=False)
     trash = models.BooleanField(default=False)
 
+    def __str__():
+        return self.id
+
 
 class News(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
@@ -29,8 +32,14 @@ class News(models.Model):
     created_at = models.DateTimeField()
     content = models.TextField()
 
+    def __str__():
+        return self.title
+
 
 class GeneralSettings(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     key = models.CharField(max_length=255, unique=True)
     value = models.CharField(max_length=1255)
+
+    def __str__(self):
+        return self.key
