@@ -43,3 +43,17 @@ class GeneralSettings(models.Model):
 
     def __str__(self):
         return self.key
+
+
+class VirtualMachine(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    name = models.CharField(max_length=255, unique=True)
+    level = models.CharField(max_length=10)
+    user_flag = models.CharField(min_length=32, max_length=32)
+    root_flag = models.CharField(min_length=32, max_length=32)
+    disk_location = models.CharField(max_length=255)
+    mac_address = models.CharField(max_length=255)
+    network_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.key
