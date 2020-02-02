@@ -54,6 +54,9 @@ class VirtualMachine(models.Model):
     disk_location = models.CharField(max_length=255)
     mac_address = models.CharField(max_length=255)
     network_name = models.CharField(max_length=255)
+    published = models.DateTimeField()
+    user_owned = models.ManyToManyField(User, blank=True)
+    root_owned = models.ManyToManyField(User, blank=True)
 
     def __str__(self):
         return self.key
