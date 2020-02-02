@@ -221,7 +221,7 @@ def machines(request):
     # Running state
 
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "virsh list --all --state-running --name"
+        "sudo virsh list --all --state-running --name"
     )
 
     if cmd_code:
@@ -269,7 +269,7 @@ def machines(request):
     # Stopped state
 
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "virsh list --all --state-shutoff --name"
+        "sudo virsh list --all --state-shutoff --name"
     )
 
     if cmd_code:
@@ -317,7 +317,7 @@ def machines(request):
     # Paused state
 
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "virsh list --all --state-paused --name"
+        "sudo virsh list --all --state-paused --name"
     )
 
     if cmd_code:
@@ -365,7 +365,7 @@ def machines(request):
     # Other state
 
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "virsh list --all --state-other --name"
+        "sudo virsh list --all --state-other --name"
     )
 
     if cmd_code:
@@ -480,7 +480,7 @@ def nat(request):
                 fp.flush()
 
                 cmd_stdout, cmd_stderr, cmd_code = callCmd(
-                    "virsh net-define " + fp.name
+                    "sudo virsh net-define " + fp.name
                 )
 
                 if cmd_code and (
@@ -497,7 +497,7 @@ def nat(request):
                     return redirect("/sys/nat/")
 
             cmd_stdout, cmd_stderr, cmd_code = callCmd(
-                "virsh net-start " + network_name
+                "sudo virsh net-start " + network_name
             )
             if cmd_code:
                 messages.error(
@@ -510,7 +510,7 @@ def nat(request):
                 )
                 return redirect("/sys/nat/")
             cmd_stdout, cmd_stderr, cmd_code = callCmd(
-                "virsh net-autostart " + network_name
+                "sudo virsh net-autostart " + network_name
             )
             if cmd_code:
                 messages.error(
@@ -592,13 +592,13 @@ def nat(request):
 def deploy_vm(request):
 
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "virsh net-list --all"
+        "sudo virsh net-list --all"
     )
 
-    if cmd_code:
+    if not cmd_code:
         virsh_networks = [x.split() for x in cmd_stdout.split("\n")[2:]]
     else:
-        messages.error(request, "Could not retrieve virsh networks")
+        messages.error(request, "Could not retrieve virsh networks.")
         virsh_networks = []
 
     if request.method == "POST":
@@ -623,7 +623,7 @@ def deploy_vm(request):
                 fp.write(vm_virsh_file.encode())
                 fp.flush()
                 cmd_stdout, cmd_stderr, cmd_code = callCmd(
-                    "virsh create " + fp.name
+                    "sudo virsh create " + fp.name
                 )
                 if not cmd_code:
                     # If success
