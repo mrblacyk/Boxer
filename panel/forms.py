@@ -97,6 +97,9 @@ class DeployVMForm(forms.Form):
                 self.cleaned_data["mac_address"]):
             self.add_error('mac_address', "Invalid mac address")
 
+        if self.cleaned_data["network"] == "non-exising":
+            self.add_error('network', "Invalid network")
+
 
 class NatForm(forms.Form):
 
