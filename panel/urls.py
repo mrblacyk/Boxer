@@ -9,15 +9,15 @@ urlpatterns = [
 
     # Machine related URLs
     path('machines/', views.machines, name='machines'),
-    path('machines/start/<int:machine_id>/', views.start_machine,
+    path('machines/start/<uuid:machine_id>/', views.start_machine,
          name='start_machine'),
-    path('machines/stop/<int:machine_id>/', views.stop_machine,
+    path('machines/stop/<uuid:machine_id>/', views.stop_machine,
          name='stop_machine'),
-    path('machines/reset/<int:machine_id>/', views.reset_machine,
+    path('machines/reset/<uuid:machine_id>/', views.reset_machine,
          name='reset_machine'),
-    path('machines/cancel/<int:machine_id>/', views.cancel_reset_machine,
+    path('machines/cancel/<uuid:machine_id>/', views.cancel_reset_machine,
          name='cancel_reset_machine'),
-    path('machines/flag/<int:machine_id>/', views.send_flag,
+    path('machines/flag/<uuid:machine_id>/', views.send_flag,
          name='send_flag'),
 
     # Mailbox
