@@ -6,6 +6,7 @@ from netaddr.core import AddrFormatError
 from subprocess import PIPE, run as s_run
 from re import search as search_regex
 from random import randrange
+from .models import GeneralSettings
 
 
 def callCmd(command):
@@ -30,7 +31,10 @@ class NewsForm(forms.Form):
 
 
 class DeployVMForm(forms.Form):
-    name = forms.CharField(max_length=255, label="VM Name")
+    name = forms.CharField(
+        max_length=255, label="VM Name",
+        help_text="Has to be unique and one word"
+    )
     level = forms.ChoiceField(
         label="VM Level",
         choices=[("Easy", "Easy"), ("Medium", "Medium"),
@@ -99,6 +103,12 @@ class DeployVMForm(forms.Form):
 
         if self.cleaned_data["network"] == "non-exising":
             self.add_error('network', "Invalid network")
+
+        self.cleaned_data["name"] = self.cleaned_data["name"].strip()
+        if len(self.cleaned_data["name"].split()) > 1:
+            self.add_error("name", "Machine name has to be one word")
+        elif GeneralSettings.objects.filter(value=self.cleaned_data["name"]):
+            self.add_error("name", "Machine name is already taken")
 
 
 class NatForm(forms.Form):
