@@ -49,14 +49,14 @@ class VirtualMachine(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     name = models.CharField(max_length=255, unique=True)
     level = models.CharField(max_length=10)
-    user_flag = models.CharField(min_length=32, max_length=32)
-    root_flag = models.CharField(min_length=32, max_length=32)
+    user_flag = models.CharField(max_length=32)
+    root_flag = models.CharField(max_length=32)
     disk_location = models.CharField(max_length=255)
     mac_address = models.CharField(max_length=255)
     network_name = models.CharField(max_length=255)
     published = models.DateTimeField()
-    user_owned = models.ManyToManyField(User, blank=True)
-    root_owned = models.ManyToManyField(User, blank=True)
+    user_owned = models.ManyToManyField(User, blank=True, related_name="user_owned")
+    root_owned = models.ManyToManyField(User, blank=True, related_name="root_owned")
 
     def __str__(self):
         return self.key
