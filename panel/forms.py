@@ -57,6 +57,16 @@ class DeployVMForm(forms.Form):
     )
     network = forms.ChoiceField(label="Virsh Network")
 
+    user_flag = forms.CharField(
+        min_length=32, max_length=32, label="User flag",
+        help_text="32 characters long flag, for instance md5 hash"
+    )
+
+    root_flag = forms.CharField(
+        min_length=32, max_length=32, label="Root flag",
+        help_text="32 characters long flag, for instance md5 hash"
+    )
+
     def __init__(self, *args, **kwargs):
         nonexist = ("non-exising", "Select..")
         if 'networks' in kwargs.keys():
