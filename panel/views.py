@@ -99,12 +99,14 @@ def cancel_reset_machine(request, machine_id):
 def send_flag(request, machine_id):
     sleep(1)
     if request.method == "POST" and request.POST.get("flag"):
-        if request.POST.get("flag") == "281":
-            # User
-            return HttpResponse(status=281)
-        elif request.POST.get("flag") == "282":
-            # Root
-            return HttpResponse(status=282)
+        vm = VirtualMachine.objects.filter(id=machine_id)
+        if vm:
+            if request.POST.get("flag") == vm[0].user_flag:
+                vm[0].user_owned.add(request.user)
+                return HttpResponse(status=281)
+            elif request.POST.get("flag") == vm[0].root_flag:
+                vm[0].root_owned.add(request.user)
+                return HttpResponse(status=282)
     return HttpResponse(status=400)
 
 

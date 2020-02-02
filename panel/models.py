@@ -46,17 +46,23 @@ class GeneralSettings(models.Model):
 
 
 class VirtualMachine(models.Model):
+    LEVEL_CHOICES = [
+        ("Easy", "Easy"),
+        ("Medium", "Medium"),
+        ("Hard", "Hard"),
+        ("Insane", "Insane"),
+    ]
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     name = models.CharField(max_length=255, unique=True)
-    level = models.CharField(max_length=10)
+    level = models.CharField(max_length=10, choices=LEVEL_CHOICES, blank=False)
     user_flag = models.CharField(max_length=32)
     root_flag = models.CharField(max_length=32)
-    disk_location = models.CharField(max_length=255)
-    mac_address = models.CharField(max_length=255)
-    network_name = models.CharField(max_length=255)
-    published = models.DateTimeField()
-    user_owned = models.ManyToManyField(User, blank=True, related_name="user_owned")
-    root_owned = models.ManyToManyField(User, blank=True, related_name="root_owned")
+    disk_location = models.CharField(max_length=255, editable=False)
+    mac_address = models.CharField(max_length=255, editable=False)
+    network_name = models.CharField(max_length=255, editable=False)
+    published = models.DateTimeField(editable=False)
+    user_owned = models.ManyToManyField(User, blank=True, related_name="user_owned", editable=False)
+    root_owned = models.ManyToManyField(User, blank=True, related_name="root_owned", editable=False)
 
     def __str__(self):
-        return self.key
+        return self.name

@@ -120,6 +120,10 @@ class DeployVMForm(forms.Form):
         elif VirtualMachine.objects.filter(name=self.cleaned_data["name"]):
             self.add_error("name", "Machine name is already taken")
 
+        if self.cleaned_data["user_flag"] == self.cleaned_data["root_flag"]:
+            self.add_error("user_flag", "Flags cannot be the same")
+            self.add_error("root_flag", "Flags cannot be the same")
+
 
 class NatForm(forms.Form):
 
