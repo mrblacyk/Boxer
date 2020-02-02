@@ -6,7 +6,7 @@ from netaddr.core import AddrFormatError
 from subprocess import PIPE, run as s_run
 from re import search as search_regex
 from random import randrange
-from .models import GeneralSettings
+from .models import VirtualMachine
 
 
 def callCmd(command):
@@ -117,7 +117,7 @@ class DeployVMForm(forms.Form):
         self.cleaned_data["name"] = self.cleaned_data["name"].strip()
         if len(self.cleaned_data["name"].split()) > 1:
             self.add_error("name", "Machine name has to be one word")
-        elif GeneralSettings.objects.filter(value=self.cleaned_data["name"]):
+        elif VirtualMachine.objects.filter(name=self.cleaned_data["name"]):
             self.add_error("name", "Machine name is already taken")
 
 

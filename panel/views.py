@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from time import sleep
-from .models import Messages, News, GeneralSettings
+from .models import *
 from .forms import MailComposeForm, NewsForm, NatForm, DeployVMForm
 from datetime import datetime, timedelta
 import json
@@ -214,6 +214,7 @@ def mailbox_user_query(request):
 def machines(request):
 
     context = {}
+    context.update({'machines-state': {}})
     context.update({'machines': []})
 
     user_name = request.user.username.replace(" ", "").upper()
@@ -230,193 +231,69 @@ def machines(request):
         cmd_stdout = cmd_stdout.strip().split("\n")
 
     for vm_name in cmd_stdout:
-        vm = GeneralSettings.objects.filter(value=vm_name)
-        if vm:
-            vm_id = int(vm[0].key.split("_")[2])
-        else:
-            continue
-        vm_level = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
-        if vm_level:
-            vm_level_value = vm_level.value
-        else:
-            vm_level_value = "ERROR!"
-        vm_publish = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")[0]
-        if vm_publish:
-            vm_publish_value = vm_publish.value
-        else:
-            vm_publish_value = "ERROR!"
-        if GeneralSettings.objects.filter(
-                key=f"DEPLOYED_VM_{vm_id}_USER_{user_name}"):
-            user_flag = True
-        else:
-            user_flag = False
-
-        if GeneralSettings.objects.filter(
-                key=f"DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
-            root_flag = True
-        else:
-            root_flag = False
-
-        context['machines'].append({
-            'name': vm_name,
-            'level': vm_level_value,
-            'status': 'RUNNING',
-            'publish_date': vm_publish_value,
-            'user': user_flag, 'root': root_flag,
-            'id': vm_id,
-        })
+        context['machines-state'][vm_name] = "RUNNING"
 
     # Stopped state
-
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
         "sudo virsh list --all --state-shutoff --name"
     )
 
     if cmd_code:
-        messages.error(request, "Failed to retrieve running VMs")
+        messages.error(request, "Failed to retrieve stopped VMs")
     else:
         cmd_stdout = cmd_stdout.strip().split("\n")
 
     for vm_name in cmd_stdout:
-        vm = GeneralSettings.objects.filter(value=vm_name)
-        if vm:
-            vm_id = int(vm[0].key.split("_")[2])
-        else:
-            continue
-        vm_level = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
-        if vm_level:
-            vm_level_value = vm_level.value
-        else:
-            vm_level_value = "ERROR!"
-        vm_publish = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")[0]
-        if vm_publish:
-            vm_publish_value = vm_publish.value
-        else:
-            vm_publish_value = "ERROR!"
-        if GeneralSettings.objects.filter(
-                key=f"DEPLOYED_VM_{vm_id}_USER_{user_name}"):
-            user_flag = True
-        else:
-            user_flag = False
+        context['machines-state'][vm_name] = "STOPPED"
 
-        if GeneralSettings.objects.filter(
-                key=f"DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
-            root_flag = True
-        else:
-            root_flag = False
-
-        context['machines'].append({
-            'name': vm_name,
-            'level': vm_level_value,
-            'status': 'STOPPED',
-            'publish_date': vm_publish_value,
-            'user': user_flag, 'root': root_flag,
-            'id': vm_id,
-        })
-
+    
     # Paused state
-
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
         "sudo virsh list --all --state-paused --name"
     )
 
     if cmd_code:
-        messages.error(request, "Failed to retrieve running VMs")
+        messages.error(request, "Failed to retrieve paused VMs")
     else:
         cmd_stdout = cmd_stdout.strip().split("\n")
 
     for vm_name in cmd_stdout:
-        vm = GeneralSettings.objects.filter(value=vm_name)
-        if vm:
-            vm_id = int(vm[0].key.split("_")[2])
-        else:
-            continue
-        vm_level = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
-        if vm_level:
-            vm_level_value = vm_level.value
-        else:
-            vm_level_value = "ERROR!"
-        vm_publish = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")[0]
-        if vm_publish:
-            vm_publish_value = vm_publish.value
-        else:
-            vm_publish_value = "ERROR!"
-        if GeneralSettings.objects.filter(
-                key=f"DEPLOYED_VM_{vm_id}_USER_{user_name}"):
-            user_flag = True
-        else:
-            user_flag = False
+        context['machines-state'][vm_name] = "PAUSED"
 
-        if GeneralSettings.objects.filter(
-                key=f"DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
-            root_flag = True
-        else:
-            root_flag = False
-
-        context['machines'].append({
-            'name': vm_name,
-            'level': vm_level_value,
-            'status': 'PAUSED',
-            'publish_date': vm_publish_value,
-            'user': user_flag, 'root': root_flag,
-            'id': vm_id,
-        })
-
+ 
     # Other state
-
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
         "sudo virsh list --all --state-other --name"
     )
 
     if cmd_code:
-        messages.error(request, "Failed to retrieve running VMs")
+        messages.error(request, "Failed to retrieve other-state VMs")
     else:
         cmd_stdout = cmd_stdout.strip().split("\n")
 
     for vm_name in cmd_stdout:
-        vm = GeneralSettings.objects.filter(value=vm_name)
-        if vm:
-            vm_id = int(vm[0].key.split("_")[2])
-        else:
-            continue
-        vm_level = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
-        if vm_level:
-            vm_level_value = vm_level.value
-        else:
-            vm_level_value = "ERROR!"
-        vm_publish = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")[0]
-        if vm_publish:
-            vm_publish_value = vm_publish.value
-        else:
-            vm_publish_value = "ERROR!"
-        if GeneralSettings.objects.filter(
-                key=f"DEPLOYED_VM_{vm_id}_USER_{user_name}"):
+        context['machines-state'][vm_name] = "OTHER"
+
+    for vm in VirtualMachine.objects.all():
+        if request.user in vm.user_owned.all():
             user_flag = True
         else:
             user_flag = False
 
-        if GeneralSettings.objects.filter(
-                key=f"DEPLOYED_VM_{vm_id}_ROOT_{user_name}"):
+        if request.user in vm.root_owned.all():
             root_flag = True
         else:
             root_flag = False
 
         context['machines'].append({
-            'name': vm_name,
-            'level': vm_level_value,
-            'status': 'UNKNOWN STATE',
-            'publish_date': vm_publish_value,
-            'user': user_flag, 'root': root_flag,
-            'id': vm_id,
-        })
+                'name': vm.name,
+                'level': vm.level,
+                'status': context['machines-state'].get(vm.name, None) or "UNKNOWN",
+                'publish_date': vm.published,
+                'user': user_flag, 'root': root_flag,
+                'id': vm.id,
+            })
+
 
     return render(request, "panel/machines.html", context)
 
@@ -634,48 +511,16 @@ def deploy_vm(request):
                     "sudo virsh create " + fp.name
                 )
                 if not cmd_code:
-                    # If success
-                    prefix_key = "DEPLOYED_VM_"
-
-                    already_existing = [
-                        [y for y in x.key.split("_")[2]] for x
-                        in GeneralSettings.objects.filter(
-                            key__regex='DEPLOYED_VM_.*_NAME').order_by(
-                            "-key")][:1]
-
-                    if already_existing:
-                        new_id = int(already_existing[-1][0]) + 1
-                    else:
-                        new_id = 1
-                    full_key = prefix_key + str(new_id) + "_NAME"
-                    if GeneralSettings.objects.filter(key=full_key):
-                        tmp = GeneralSettings.objects.get(key=full_key)
-                    else:
-                        tmp = GeneralSettings()
-                        tmp.key = full_key
-                    tmp.value = form.cleaned_data["name"]
-                    tmp.save()
-                    del tmp
-
-                    full_key = prefix_key + str(new_id) + "_LEVEL"
-                    if GeneralSettings.objects.filter(key=full_key):
-                        tmp = GeneralSettings.objects.get(key=full_key)
-                    else:
-                        tmp = GeneralSettings()
-                        tmp.key = full_key
-                    tmp.value = form.cleaned_data["level"]
-                    tmp.save()
-                    del tmp
-
-                    full_key = prefix_key + str(new_id) + "_PUBLISHED"
-                    if GeneralSettings.objects.filter(key=full_key):
-                        tmp = GeneralSettings.objects.get(key=full_key)
-                    else:
-                        tmp = GeneralSettings()
-                        tmp.key = full_key
-                    tmp.value = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-                    tmp.save()
-                    del tmp
+                    vm = VirtualMachine()
+                    vm.name = form.cleaned_data["name"]
+                    vm.level = form.cleaned_data["level"]
+                    vm.published = datetime.now()
+                    vm.user_flag = form.cleaned_data["user_flag"]
+                    vm.root_flag = form.cleaned_data["root_flag"]
+                    vm.disk_location = form.cleaned_data["disk_location"]
+                    vm.mac_address = form.cleaned_data["mac_address"]
+                    vm.network_name = form.cleaned_data["network"]
+                    vm.save()
 
                     messages.success(
                         request,

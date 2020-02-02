@@ -6,3 +6,4 @@ from .models import *
 admin.site.register(Messages)
 admin.site.register(News)
 admin.site.register(GeneralSettings)
+admin.site.register(VirtualMachine)
