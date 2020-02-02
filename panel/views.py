@@ -232,15 +232,15 @@ def machines(request):
     for vm_name in cmd_stdout:
         vm = GeneralSettings.objects.filter(value=vm_name)
         if vm:
-            vm_id = int(vm.key.split("_")[2])
+            vm_id = int(vm[0].key.split("_")[2])
         vm_level = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_LEVEL")
+            key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
         if vm_level:
             vm_level_value = vm_level.value
         else:
             vm_level_value = "ERROR!"
         vm_publish = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")
+            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")[0]
         if vm_publish:
             vm_publish_value = vm_publish.value
         else:
@@ -280,15 +280,15 @@ def machines(request):
     for vm_name in cmd_stdout:
         vm = GeneralSettings.objects.filter(value=vm_name)
         if vm:
-            vm_id = int(vm.key.split("_")[2])
+            vm_id = int(vm[0].key.split("_")[2])
         vm_level = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_LEVEL")
+            key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
         if vm_level:
             vm_level_value = vm_level.value
         else:
             vm_level_value = "ERROR!"
         vm_publish = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")
+            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")[0]
         if vm_publish:
             vm_publish_value = vm_publish.value
         else:
@@ -328,15 +328,15 @@ def machines(request):
     for vm_name in cmd_stdout:
         vm = GeneralSettings.objects.filter(value=vm_name)
         if vm:
-            vm_id = int(vm.key.split("_")[2])
+            vm_id = int(vm[0].key.split("_")[2])
         vm_level = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_LEVEL")
+            key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
         if vm_level:
             vm_level_value = vm_level.value
         else:
             vm_level_value = "ERROR!"
         vm_publish = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")
+            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")[0]
         if vm_publish:
             vm_publish_value = vm_publish.value
         else:
@@ -376,15 +376,15 @@ def machines(request):
     for vm_name in cmd_stdout:
         vm = GeneralSettings.objects.filter(value=vm_name)
         if vm:
-            vm_id = int(vm.key.split("_")[2])
+            vm_id = int(vm[0].key.split("_")[2])
         vm_level = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_LEVEL")
+            key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
         if vm_level:
             vm_level_value = vm_level.value
         else:
             vm_level_value = "ERROR!"
         vm_publish = GeneralSettings.objects.filter(
-            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")
+            key=f"DEPLOYED_VM_{vm_id}_PUBLISHED")[0]
         if vm_publish:
             vm_publish_value = vm_publish.value
         else:
