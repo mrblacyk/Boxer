@@ -233,6 +233,8 @@ def machines(request):
         vm = GeneralSettings.objects.filter(value=vm_name)
         if vm:
             vm_id = int(vm[0].key.split("_")[2])
+        else:
+            continue
         vm_level = GeneralSettings.objects.filter(
             key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
         if vm_level:
@@ -281,6 +283,8 @@ def machines(request):
         vm = GeneralSettings.objects.filter(value=vm_name)
         if vm:
             vm_id = int(vm[0].key.split("_")[2])
+        else:
+            continue
         vm_level = GeneralSettings.objects.filter(
             key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
         if vm_level:
@@ -329,6 +333,8 @@ def machines(request):
         vm = GeneralSettings.objects.filter(value=vm_name)
         if vm:
             vm_id = int(vm[0].key.split("_")[2])
+        else:
+            continue
         vm_level = GeneralSettings.objects.filter(
             key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
         if vm_level:
@@ -377,6 +383,8 @@ def machines(request):
         vm = GeneralSettings.objects.filter(value=vm_name)
         if vm:
             vm_id = int(vm[0].key.split("_")[2])
+        else:
+            continue
         vm_level = GeneralSettings.objects.filter(
             key=f"DEPLOYED_VM_{vm_id}_LEVEL")[0]
         if vm_level:
