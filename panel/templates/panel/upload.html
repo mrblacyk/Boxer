@@ -1,0 +1,30 @@
+{% extends 'panel/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block main_content %}
+
+<center>
+<form method="POST" action="/upload/" enctype="multipart/form-data" id="upload-form-modal">
+        <div class="card card-primary card-outline" style="width: 50%">
+              <div class="card-header">
+        {{ form|crispy }}
+        {% csrf_token %}
+
+    </div>
+        <div class="card-footer">
+          <div class="float-right">
+            <button type="submit" class="btn btn-primary">Deploy</button>
+          </div>
+        </div>
+    </div>
+    </form>
+</center>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="{% static 'plugins/bootstrap-uploadprogress/js/bootstrap-uploadprogress.js' %}"></script>
+<script>
+	$("form").uploadprogress({redirect_url: '/upload/'});
+</script>
+{% endblock %}

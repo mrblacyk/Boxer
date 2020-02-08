@@ -36,4 +36,5 @@ urlpatterns = [
     # System related URLs
     path('sys/nat/', views.nat, name='nat'),
     path('sys/deploy-vm/', views.deploy_vm, name='deploy_vm'),
+    path('upload/', views.file_upload, name='file_upload'),
 ]

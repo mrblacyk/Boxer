@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from time import sleep
 from .models import *
-from .forms import MailComposeForm, NewsForm, NatForm, DeployVMForm
+from .forms import *
 from datetime import datetime, timedelta
 from socket import if_nameindex, if_indextoname
 from netaddr import IPNetwork
@@ -37,6 +37,30 @@ def statistics(request):
     context = {}
 
     return render(request, "panel/statistics.html", context)
+
+
+def handle_uploaded_file(f, fname):
+    with open('uploads/' + fname, 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+
+
+@login_required
+def file_upload(request):
+    status = 200
+    context = {}
+    if request.method == "POST":
+        form = UploadFileForm(request.POST, request.FILES)
+        file_name = request.POST['name'].replace(" ", "_") + "_" + str(request.FILES['file'])
+        if form.is_valid():
+            handle_uploaded_file(request.FILES['file'], file_name)
+            messages.success(request, "Successfully uploaded %s!" % file_name)
+        else:
+            status = 422
+    else:
+        form = UploadFileForm()
+    context = {'form': form}
+    return render(request, "panel/upload.html", context, status=status)
 
 
 @login_required

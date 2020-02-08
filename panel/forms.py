@@ -19,6 +19,18 @@ def callCmd(command):
     return cmd.stdout.decode(), cmd.stderr.decode(), cmd.returncode
 
 
+class UploadFileForm(forms.Form):
+    name = forms.CharField(max_length=255, label="VM Name")
+    file = forms.FileField()
+
+    def clean(self):
+        self.cleaned_data["name"] = self.cleaned_data["name"].strip()
+        if len(self.cleaned_data["name"].split()) > 1:
+            self.add_error("name", "Machine name has to be one word")
+        elif VirtualMachine.objects.filter(name=self.cleaned_data["name"]):
+            self.add_error("name", "Machine name is already taken")
+
+
 class MailComposeForm(forms.Form):
     receiver = forms.CharField(max_length=255)
     subject = forms.CharField(max_length=255)
