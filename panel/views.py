@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render as render_django
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
@@ -18,8 +18,26 @@ from netaddr import IPAddress
 from _thread import start_new_thread
 
 import json
+from os import path, getcwd
 
 # Create your views here.
+
+
+def render(*args, **kwargs):
+    user = None
+    for index, argument in enumerate(args):
+        if index == 0:
+            user = argument.user
+            break
+
+    unread_count = Messages.objects.filter(receiver=user, read=False).count()
+    if unread_count:
+        for index, argument in enumerate(args):
+            if index == 2:
+                argument.update({'unread': unread_count})
+                break
+
+    return render_django(*args, **kwargs)
 
 
 def callCmd(command):
@@ -45,22 +63,47 @@ def handle_uploaded_file(f, fname):
             destination.write(chunk)
 
 
+def send_upload_email(req_user, fname, floc):
+    new_mail = Messages()
+    new_mail.sender = req_user
+    new_mail.receiver = req_user
+    new_mail.subject = f"File upload details - {fname}"
+    today = datetime.now()
+    new_mail.content = f"""Hey!<br>
+<br>
+On <b>{today}</b> you have uploaded a file <b>{fname}</b>. It is available under location of:<br>
+<br>
+<b>{floc}</b>
+<br><br>
+--<br>
+<br>
+Thanks,<br>
+SYSTEM
+"""
+    new_mail.created_at = datetime.now()
+    new_mail.save()
+    return True
+
 @login_required
 def file_upload(request):
-    status = 200
     context = {}
     if request.method == "POST":
         form = UploadFileForm(request.POST, request.FILES)
-        file_name = request.POST['name'].replace(" ", "_") + "_" + str(request.FILES['file'])
+        context = {'form': form}
+        file_name = request.POST['name'].replace(" ", "_") + "_" + str(datetime.now().microsecond) + "_" + str(request.FILES['file'])
+        file_loc = path.abspath(getcwd()) + '/uploads/' + file_name
         if form.is_valid():
             handle_uploaded_file(request.FILES['file'], file_name)
-            messages.success(request, "Successfully uploaded %s!" % file_name)
+            messages.success(request, "Successfully uploaded %s!<br>Check your mailbox for details." % file_name)
+            send_upload_email(request.user, str(request.FILES['file']), file_loc)
+            return redirect("/upload/")
         else:
-            status = 422
+            messages.warning(request, "Upload was not valid")
+            return redirect("/upload/")
     else:
         form = UploadFileForm()
     context = {'form': form}
-    return render(request, "panel/upload.html", context, status=status)
+    return render(request, "panel/upload.html", context)
 
 
 @login_required
@@ -82,16 +125,40 @@ def start_machine(request, machine_id):
     # sd
     sleep(1)
     if request.method == "GET":
+        vm_to_handle = VirtualMachine.objects.get(id=machine_id)
         cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "sudo virsh list --all --name"
+            "sudo virsh list --all --name"
         )
 
-        if cmd_code:
-            pass
-        # Started
-        return HttpResponse(status=241)
-        # Already started
-        return HttpResponse(status=242)
+        if not cmd_code:
+            all_vms = cmd_stdout.strip().split()
+        else:
+            all_vms = []
+        if vm_to_handle.name not in all_vms:
+            return HttpResponse(status=400)
+
+        cmd_stdout, cmd_stderr, cmd_code = callCmd(
+            "sudo virsh list --state-running --name"
+        )
+
+        if not cmd_code:
+            running_vms = cmd_stdout.strip().split()
+        else:
+            running_vms = []
+        if vm_to_handle.name in running_vms:
+            # Already started
+            return HttpResponse(status=242)
+        elif vm_to_handle.name in all_vms:
+            cmd_stdout, cmd_stderr, cmd_code = callCmd(
+                f"sudo virsh start {vm_to_handle.name}"
+            )
+
+            if not cmd_code:
+                # Started
+                return HttpResponse(status=241)
+            else:
+                return HttpResponse(status=400)
+        
     return HttpResponse(status=400)
 
 
@@ -99,10 +166,43 @@ def start_machine(request, machine_id):
 def stop_machine(request, machine_id):
     sleep(1)
     if request.method == "GET":
-        # Stopped
-        return HttpResponse(status=251)
-        # Already stopped
-        return HttpResponse(status=252)
+        vm_to_handle = VirtualMachine.objects.get(id=machine_id)
+        cmd_stdout, cmd_stderr, cmd_code = callCmd(
+            "sudo virsh list --all --name"
+        )
+
+        if not cmd_code:
+            all_vms = cmd_stdout.strip().split()
+        else:
+            all_vms = []
+        if vm_to_handle.name not in all_vms:
+            return HttpResponse(status=400)
+
+        cmd_stdout, cmd_stderr, cmd_code = callCmd(
+            "sudo virsh list --state-shutoff --name"
+        )
+
+        if not cmd_code:
+            shutoff_vms = cmd_stdout.strip().split()
+        else:
+            shutoff_vms = []
+        if vm_to_handle.name in shutoff_vms:
+            # Already stopped
+            return HttpResponse(status=252)
+
+        elif vm_to_handle.name in all_vms:
+            cmd_stdout, cmd_stderr, cmd_code = callCmd(
+                f"sudo virsh shutdown {vm_to_handle.name}"
+            )
+
+            if not cmd_code:
+                # Stopped
+                return HttpResponse(status=251)
+            else:
+                print(cmd_stdout)
+                print(cmd_stderr)
+                return HttpResponse(status=400)
+        
     return HttpResponse(status=400)
 
 
@@ -184,7 +284,13 @@ def mailbox_sent(request):
 
 @login_required
 def mailbox_read(request, mail_id):
-    mailbox_message = Messages.objects.get(id=mail_id)
+    mailbox_message = Messages.objects.filter(id=mail_id)
+    if not mailbox_message:
+        return redirect("/mailbox/")
+    else:
+        mailbox_message = mailbox_message[0]
+    if request.user not in [mailbox_message.sender, mailbox_message.receiver]:
+        return redirect("/mailbox/")
     if not mailbox_message.read:
         mailbox_message.read = True
         mailbox_message.save()

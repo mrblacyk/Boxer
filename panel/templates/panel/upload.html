@@ -8,13 +8,14 @@
 <form method="POST" action="/upload/" enctype="multipart/form-data" id="upload-form-modal">
         <div class="card card-primary card-outline" style="width: 50%">
               <div class="card-header">
-        {{ form|crispy }}
         {% csrf_token %}
+
+        {{ form|crispy }}
 
     </div>
         <div class="card-footer">
           <div class="float-right">
-            <button type="submit" class="btn btn-primary">Deploy</button>
+            <button type="submit" class="btn btn-primary">Upload</button>
           </div>
         </div>
     </div>
@@ -25,6 +26,6 @@
 {% block scripts %}
 <script type="text/javascript" src="{% static 'plugins/bootstrap-uploadprogress/js/bootstrap-uploadprogress.js' %}"></script>
 <script>
-	$("form").uploadprogress({redirect_url: '/upload/'});
+	//$("form").uploadprogress({redirect_url: '/upload/'});
 </script>
 {% endblock %}

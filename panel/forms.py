@@ -7,6 +7,7 @@ from subprocess import PIPE, run as s_run
 from re import search as search_regex
 from random import randrange
 from .models import VirtualMachine
+from django.core.validators import FileExtensionValidator
 
 
 def callCmd(command):

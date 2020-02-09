@@ -128,7 +128,16 @@
             <a href="/mailbox/" class="nav-link">
               <i class="nav-icon far fa-envelope"></i>
               <p>
-                Mailbox
+                Mailbox 
+              </p>
+              {% if unread %}<span class="badge badge-info right">{{ unread }}</span>{% endif %}
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="/upload/" class="nav-link">
+              <i class="nav-icon fas fa-file-upload"></i>
+              <p>
+                Upload a file 
               </p>
             </a>
           </li>
