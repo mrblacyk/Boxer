@@ -1,6 +1,0 @@
-# defining and launching an LXC guest
-- name: define vm
-  virt:
-    command: define
-    xml: "/Users/jweinzet/projects/.private/AP-HTB/vm_template.xml"
-    uri: 'lxc:///'
