@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render as render_django
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AnonymousUser
 from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import render_to_string
@@ -12,13 +12,19 @@ from .forms import *
 from datetime import datetime, timedelta
 from socket import if_nameindex, if_indextoname
 from netaddr import IPNetwork
-from subprocess import PIPE, run as s_run
 from tempfile import NamedTemporaryFile
 from netaddr import IPAddress
 from _thread import start_new_thread
-
-import json
 from os import path, getcwd
+from libvirt import libvirtError
+
+import panel.aplibvirt as aplibvirt
+import json
+
+# Global vars
+
+global virt_conn
+virt_conn = aplibvirt.connect()
 
 # Create your views here.
 
@@ -29,25 +35,16 @@ def render(*args, **kwargs):
         if index == 0:
             user = argument.user
             break
-
-    unread_count = Messages.objects.filter(receiver=user, read=False).count()
-    if unread_count:
-        for index, argument in enumerate(args):
-            if index == 2:
-                argument.update({'unread': unread_count})
-                break
+    if not isinstance(user, AnonymousUser):
+        unread_count = Messages.objects.filter(
+            receiver=user, read=False).count()
+        if unread_count:
+            for index, argument in enumerate(args):
+                if index == 2:
+                    argument.update({'unread': unread_count})
+                    break
 
     return render_django(*args, **kwargs)
-
-
-def callCmd(command):
-    """ Returns stdout, stderr and returncode"""
-    if not isinstance(command, str):
-        raise Exception("Command has to be a string")
-    cmd = s_run(
-        command.split(), stdout=PIPE, stderr=PIPE
-    )
-    return cmd.stdout.decode(), cmd.stderr.decode(), cmd.returncode
 
 
 @login_required
@@ -83,6 +80,7 @@ SYSTEM
     new_mail.created_at = datetime.now()
     new_mail.save()
     return True
+
 
 @login_required
 def file_upload(request):
@@ -125,40 +123,20 @@ def start_machine(request, machine_id):
     # sd
     sleep(1)
     if request.method == "GET":
-        vm_to_handle = VirtualMachine.objects.get(id=machine_id)
-        cmd_stdout, cmd_stderr, cmd_code = callCmd(
-            "sudo virsh list --all --name"
-        )
-
-        if not cmd_code:
-            all_vms = cmd_stdout.strip().split()
-        else:
-            all_vms = []
-        if vm_to_handle.name not in all_vms:
+        vm_name = VirtualMachine.objects.get(id=machine_id).name
+        try:
+            vm_state, vm_already_running = aplibvirt.startMachine(
+                virt_conn, vm_name)
+        except (libvirtError, Exception):
             return HttpResponse(status=400)
 
-        cmd_stdout, cmd_stderr, cmd_code = callCmd(
-            "sudo virsh list --state-running --name"
-        )
-
-        if not cmd_code:
-            running_vms = cmd_stdout.strip().split()
-        else:
-            running_vms = []
-        if vm_to_handle.name in running_vms:
+        if vm_already_running:
             # Already started
             return HttpResponse(status=242)
-        elif vm_to_handle.name in all_vms:
-            cmd_stdout, cmd_stderr, cmd_code = callCmd(
-                f"sudo virsh start {vm_to_handle.name}"
-            )
+        elif vm_state == aplibvirt.MACHINE_STATE_RUNNING:
+            # Started
+            return HttpResponse(status=241)
 
-            if not cmd_code:
-                # Started
-                return HttpResponse(status=241)
-            else:
-                return HttpResponse(status=400)
-        
     return HttpResponse(status=400)
 
 
@@ -166,43 +144,21 @@ def start_machine(request, machine_id):
 def stop_machine(request, machine_id):
     sleep(1)
     if request.method == "GET":
-        vm_to_handle = VirtualMachine.objects.get(id=machine_id)
-        cmd_stdout, cmd_stderr, cmd_code = callCmd(
-            "sudo virsh list --all --name"
-        )
-
-        if not cmd_code:
-            all_vms = cmd_stdout.strip().split()
-        else:
-            all_vms = []
-        if vm_to_handle.name not in all_vms:
+        vm_name = VirtualMachine.objects.get(id=machine_id).name
+        try:
+            vm_state, vm_already_stopped = aplibvirt.stopMachine(
+                virt_conn, vm_name)
+        except (libvirtError, Exception):
             return HttpResponse(status=400)
 
-        cmd_stdout, cmd_stderr, cmd_code = callCmd(
-            "sudo virsh list --state-shutoff --name"
-        )
-
-        if not cmd_code:
-            shutoff_vms = cmd_stdout.strip().split()
-        else:
-            shutoff_vms = []
-        if vm_to_handle.name in shutoff_vms:
+        if vm_already_stopped:
             # Already stopped
             return HttpResponse(status=252)
 
-        elif vm_to_handle.name in all_vms:
-            cmd_stdout, cmd_stderr, cmd_code = callCmd(
-                f"sudo virsh shutdown {vm_to_handle.name}"
-            )
-
-            if not cmd_code:
+        elif vm_state == aplibvirt.MACHINE_STATE_SHUTOFF:
                 # Stopped
                 return HttpResponse(status=251)
-            else:
-                print(cmd_stdout)
-                print(cmd_stderr)
-                return HttpResponse(status=400)
-        
+
     return HttpResponse(status=400)
 
 
@@ -355,65 +311,9 @@ def mailbox_user_query(request):
 def machines(request):
 
     context = {}
-    context.update({'machines-state': {}})
     context.update({'machines': []})
 
-    user_name = request.user.username.replace(" ", "").upper()
-
-    # Running state
-
-    cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "sudo virsh list --all --state-running --name"
-    )
-
-    if cmd_code:
-        messages.error(request, "Failed to retrieve running VMs")
-    else:
-        cmd_stdout = cmd_stdout.strip().split("\n")
-
-    for vm_name in cmd_stdout:
-        context['machines-state'][vm_name] = "RUNNING"
-
-    # Stopped state
-    cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "sudo virsh list --all --state-shutoff --name"
-    )
-
-    if cmd_code:
-        messages.error(request, "Failed to retrieve stopped VMs")
-    else:
-        cmd_stdout = cmd_stdout.strip().split("\n")
-
-    for vm_name in cmd_stdout:
-        context['machines-state'][vm_name] = "STOPPED"
-
-    
-    # Paused state
-    cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "sudo virsh list --all --state-paused --name"
-    )
-
-    if cmd_code:
-        messages.error(request, "Failed to retrieve paused VMs")
-    else:
-        cmd_stdout = cmd_stdout.strip().split("\n")
-
-    for vm_name in cmd_stdout:
-        context['machines-state'][vm_name] = "PAUSED"
-
- 
-    # Other state
-    cmd_stdout, cmd_stderr, cmd_code = callCmd(
-        "sudo virsh list --all --state-other --name"
-    )
-
-    if cmd_code:
-        messages.error(request, "Failed to retrieve other-state VMs")
-    else:
-        cmd_stdout = cmd_stdout.strip().split("\n")
-
-    for vm_name in cmd_stdout:
-        context['machines-state'][vm_name] = "OTHER"
+    all_domains = aplibvirt.listMachines(virt_conn)
 
     for vm in VirtualMachine.objects.all():
         if request.user in vm.user_owned.all():
@@ -429,17 +329,21 @@ def machines(request):
         if not vm.deployed:
             status = "DEPLOYING.."
         else:
-            status = context['machines-state'].get(vm.name, None) or "UNKNOWN"
+            if vm.name in all_domains:
+                status = aplibvirt.translateMachineState(
+                    all_domains[vm.name]
+                )
+            else:
+                status = "UNKNOWN"
 
         context['machines'].append({
-                'name': vm.name,
-                'level': vm.level,
-                'status': status,
-                'publish_date': vm.published,
-                'user': user_flag, 'root': root_flag,
-                'id': vm.id,
-            })
-
+            'name': vm.name,
+            'level': vm.level,
+            'status': status,
+            'publish_date': vm.published,
+            'user': user_flag, 'root': root_flag,
+            'id': vm.id,
+        })
 
     return render(request, "panel/machines.html", context)
 
@@ -472,6 +376,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return render(request, "panel/login.html", {})
+
 
 @login_required
 def nat(request):
@@ -506,11 +411,14 @@ def nat(request):
                 "nat.xml",
                 result_dict
             )
+            with open("nat_config.xml", "w") as fppp:
+                fppp.write(nat_virsh_file)
+                fppp.flush()
             with NamedTemporaryFile() as fp:
                 fp.write(nat_virsh_file.encode())
                 fp.flush()
 
-                cmd_stdout, cmd_stderr, cmd_code = callCmd(
+                cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
                     "sudo virsh net-define " + fp.name
                 )
 
@@ -527,7 +435,7 @@ def nat(request):
                     )
                     return redirect("/sys/nat/")
 
-            cmd_stdout, cmd_stderr, cmd_code = callCmd(
+            cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
                 "sudo virsh net-start " + network_name
             )
             if cmd_code:
@@ -540,7 +448,7 @@ def nat(request):
                     cmd_stderr.replace("\n", "<br/>")
                 )
                 return redirect("/sys/nat/")
-            cmd_stdout, cmd_stderr, cmd_code = callCmd(
+            cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
                 "sudo virsh net-autostart " + network_name
             )
             if cmd_code:
@@ -628,11 +536,11 @@ def create_snapshot(vm_name):
         vm.save()
         snapshot_command = f'sudo virsh snapshot-create-as --disk-only {vm.name} INIT'
 
-        cmd_stdout, cmd_stderr, cmd_code = callCmd(snapshot_command)
+        cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(snapshot_command)
         if cmd_code:
             return False
         else:
-            cmd_stdout, cmd_stderr, cmd_code = callCmd(
+            cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
                 f'sudo virsh start {vm.name}'
             )
             vm.lock = False
@@ -645,7 +553,7 @@ def create_snapshot(vm_name):
 @login_required
 def deploy_vm(request):
 
-    cmd_stdout, cmd_stderr, cmd_code = callCmd(
+    cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
         "sudo virsh net-list --all"
     )
 
@@ -690,12 +598,12 @@ def deploy_vm(request):
                 network_name = form.cleaned_data["network"]
                 add_ip_cmd = "sudo virsh net-update %s add-last ip-dhcp-host --xml \"<host mac='%s' ip='%s'/>\" --live --config" % (network_name, mac_addr, ip_addr)
                 print(add_ip_cmd)
-                cmd_stdout, cmd_stderr, cmd_code = callCmd(add_ip_cmd)
+                cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(add_ip_cmd)
 
                 if cmd_code:
                     messages.warning(request, "Failed to assign static IP. Expect DHCP assigned IP.")
 
-                cmd_stdout, cmd_stderr, cmd_code = callCmd(
+                cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
                     "sudo virsh define " + fp.name
                 )
                 if not cmd_code:

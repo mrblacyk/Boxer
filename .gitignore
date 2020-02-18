@@ -130,3 +130,6 @@ dmypy.json
 
 # VMDK files
 *.vmdk
+
+# Upload dir in general
+uploads/
