@@ -92,7 +92,7 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="/" class="nav-link">
+                <a href="/" class="nav-link {% if '/' == request.path %}active{% endif %}">
                   <i class="far fa-circle nav-icon"></i>
                   <p>News</p>
                 </a>
@@ -100,7 +100,7 @@
             </ul>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="/statistics/" class="nav-link">
+                <a href="/statistics/" class="nav-link {% if '/statistics/' in request.path %}active{% endif %}">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Statistics</p>
                 </a>
@@ -108,7 +108,7 @@
             </ul>
           </li>
           <li class="nav-item">
-            <a href="/machines/" class="nav-link">
+            <a href="/machines/" class="nav-link {% if '/machines/' in request.path %}active{% endif %}">
               <i class="nav-icon fas fa-th"></i>
               <p>
                 Machines
@@ -125,16 +125,16 @@
             </a>
           </li> -->
           <li class="nav-item">
-            <a href="/mailbox/" class="nav-link">
+            <a href="/mailbox/" class="nav-link {% if '/mailbox/' in request.path %}active{% endif %}">
               <i class="nav-icon far fa-envelope"></i>
               <p>
-                Mailbox 
+                Mailbox
               </p>
               {% if unread %}<span class="badge badge-info right">{{ unread }}</span>{% endif %}
             </a>
           </li>
           <li class="nav-item">
-            <a href="/upload/" class="nav-link">
+            <a href="/upload/" class="nav-link {% if '/upload/' in request.path %}active{% endif %}">
               <i class="nav-icon fas fa-file-upload"></i>
               <p>
                 Upload a file 
@@ -143,7 +143,7 @@
           </li>
           {% for group in request.user.groups.all %}
           {% if group.name == "sysadmin" %}
-          <li class="nav-item has-treeview">
+          <li class="nav-item has-treeview {% if '/sys/' in request.path %}menu-open{% endif %}">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-toolbox"></i>
               <p>
@@ -153,13 +153,13 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="/sys/nat/" class="nav-link">
+                <a href="/sys/nat/" class="nav-link {% if '/sys/nat/' in request.path %}active{% endif %}">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Network</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="/sys/deploy-vm/" class="nav-link">
+                <a href="/sys/deploy-vm/" class="nav-link {% if '/sys/deploy-vm/' in request.path %}active{% endif %}">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Deploy VM</p>
                 </a>

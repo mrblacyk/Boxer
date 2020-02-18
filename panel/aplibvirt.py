@@ -142,6 +142,67 @@ def listMachines(virt_conn: libvirt.virConnect) -> list:
     return all_domains
 
 
+SNAPSHOT_XML_TEMPLATE = """<domainsnapshot>
+  <name>{snapshot_name}</name>
+</domainsnapshot>"""
+
+
+def createSnapshot(
+        virt_conn: libvirt.virConnect,
+        domain_name: str, snapshot_name: str) -> bool:
+    """ Make a snapshot of shutoff VM """
+
+    virt_conn = reassureConnection(virt_conn)
+
+    # Make sure VM is shutoff
+    _, _ = stopMachine(virt_conn, domain_name)
+
+    vm = virt_conn.lookupByName(domain_name)
+
+    try:
+        vm.snapshotCreateXML(
+            SNAPSHOT_XML_TEMPLATE.format(snapshot_name=snapshot_name)
+        )
+    except libvirt.libvirtError:
+        return False
+
+    return True
+
+
+def revertSnapshot(
+        virt_conn: libvirt.virConnect,
+        domain_name: str, snapshot_name: str) -> bool:
+    """ Revert a snapshot of shutoff VM """
+
+    virt_conn = reassureConnection(virt_conn)
+
+    vm = virt_conn.lookupByName(domain_name)
+    snapshot = vm.snapshotLookupByName(snapshot_name)
+
+    # Make sure VM is shutoff
+    _, _ = stopMachine(virt_conn, domain_name)
+
+    try:
+        vm.revertToSnapshot(snapshot)
+    except libvirt.libvirtError:
+        return False
+
+    return True
+
+
+def createMachine(virt_conn: libvirt.virConnect, xml: str) -> bool:
+    """ Create VM """
+
+    virt_conn = reassureConnection(virt_conn)
+
+    try:
+        virt_conn.defineXML(xml)
+    except libvirt.libvirtError:
+        return False
+
+    return True
+
+
 def translateMachineState(state: int) -> str:
     if state in [MACHINE_STATE_SHUTOFF, MACHINE_STATE_SHUTDOWN]:
         return "STOPPED"

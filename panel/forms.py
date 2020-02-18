@@ -7,7 +7,7 @@ from subprocess import PIPE, run as s_run
 from re import search as search_regex
 from random import randrange
 from .models import VirtualMachine
-from django.core.validators import FileExtensionValidator
+# from django.core.validators import FileExtensionValidator
 
 
 def callCmd(command):
@@ -117,8 +117,8 @@ class DeployVMForm(forms.Form):
 
         if not self.cleaned_data.get("mac_address", None):
             # Generate random mac address
-            self.cleaned_data["mac_address"] = ":".join(
-                ['%02x' % randrange(256) for _ in range(6)])
+            self.cleaned_data["mac_address"] = "02:00:00:" + ":".join(
+                ['%02x' % randrange(256) for _ in range(3)])
         elif not search_regex(
             '^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$',
                 self.cleaned_data["mac_address"]):

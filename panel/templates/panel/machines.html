@@ -263,7 +263,7 @@
           $.notify({message: "System pwned!"},{type: 'success', offset: {y: 70, x: 20}});
         }
         if ($("#user-" + machine_id).css('opacity') == '1' && $("#root-" + machine_id).css('opacity') == '1') {
-          $("[data-id=" + machine_id + "]").attr("disabled", true);
+          $("[data-id=" + machine_id + "].btn-info ").attr("disabled", true);
         }
       }
     });

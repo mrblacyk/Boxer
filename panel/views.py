@@ -534,18 +534,13 @@ def create_snapshot(vm_name):
         # Lock to *try* preventing other code to modify VM
         vm.lock = True
         vm.save()
-        snapshot_command = f'sudo virsh snapshot-create-as --disk-only {vm.name} INIT'
 
-        cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(snapshot_command)
-        if cmd_code:
-            return False
-        else:
-            cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
-                f'sudo virsh start {vm.name}'
-            )
-            vm.lock = False
-            vm.deployed = True
-            vm.save()
+        aplibvirt.createSnapshot(virt_conn, vm_name, "init_snapshot")
+
+        # Success
+        vm.lock = False
+        vm.deployed = True
+        vm.save()
 
         return redirect('/machines/')
 
@@ -580,59 +575,62 @@ def deploy_vm(request):
                 "vm.xml",
                 result_dict
             )
-            print("valid form")
-            with NamedTemporaryFile() as fp:
-                fp.write(vm_virsh_file.encode())
-                fp.flush()
-                vm_len = VirtualMachine.objects.count()
-                end_dhcp = GeneralSettings.objects.get(key="NETWORK_CONFIGURATION_DHCP_END")
-                start_dhcp = GeneralSettings.objects.get(key="NETWORK_CONFIGURATION_DHCP_START")
-                end_dhcp = IPAddress(end_dhcp.value)
-                start_dhcp = IPAddress(start_dhcp.value)
-                available_pool = int(end_dhcp - start_dhcp)
-                if vm_len >= available_pool:
-                    request.error(request, "No IPs avaialble")
-                    return redirect("/sys/deploy-vm/")
-                ip_addr = str(start_dhcp + vm_len)
-                mac_addr = form.cleaned_data["mac_address"]
-                network_name = form.cleaned_data["network"]
-                add_ip_cmd = "sudo virsh net-update %s add-last ip-dhcp-host --xml \"<host mac='%s' ip='%s'/>\" --live --config" % (network_name, mac_addr, ip_addr)
-                print(add_ip_cmd)
-                cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(add_ip_cmd)
 
-                if cmd_code:
-                    messages.warning(request, "Failed to assign static IP. Expect DHCP assigned IP.")
+            vm_len = VirtualMachine.objects.count()
+            end_dhcp = GeneralSettings.objects.get(
+                key="NETWORK_CONFIGURATION_DHCP_END"
+            )
+            start_dhcp = GeneralSettings.objects.get(
+                key="NETWORK_CONFIGURATION_DHCP_START"
+            )
+            end_dhcp = IPAddress(end_dhcp.value)
+            start_dhcp = IPAddress(start_dhcp.value)
+            available_pool = int(end_dhcp - start_dhcp)
+            if vm_len >= available_pool:
+                request.error(request, "No IPs avaialble")
+                return redirect("/sys/deploy-vm/")
+            ip_addr = str(start_dhcp + vm_len)
+            # mac_addr = form.cleaned_data["mac_address"]
+            # network_name = form.cleaned_data["network"]
+            # add_ip_cmd = "sudo virsh net-update %s add-last ip-dhcp-host --xml \"<host mac='%s' ip='%s'/>\" --live --config" % (network_name, mac_addr, ip_addr)
 
-                cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
-                    "sudo virsh define " + fp.name
+            # cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(add_ip_cmd)
+
+            # if cmd_code:
+            #     messages.warning(
+            #         request,
+            #         "Failed to assign static IP. Expect DHCP assigned IP."
+            #     )
+
+            vm_created = aplibvirt.createMachine(virt_conn, vm_virsh_file)
+
+            if vm_created:
+                vm = VirtualMachine()
+                vm.name = form.cleaned_data["name"]
+                vm.level = form.cleaned_data["level"]
+                vm.published = datetime.now()
+                vm.user_flag = form.cleaned_data["user_flag"]
+                vm.root_flag = form.cleaned_data["root_flag"]
+                vm.disk_location = form.cleaned_data["disk_location"]
+                vm.mac_address = form.cleaned_data["mac_address"]
+                vm.network_name = form.cleaned_data["network"]
+                vm.ip_addr = ip_addr
+                vm.save()
+
+                messages.success(
+                    request,
+                    "Successfully deployed VM!<br>" +
+                    "Snapshoting in the background."
                 )
-                if not cmd_code:
-                    vm = VirtualMachine()
-                    vm.name = form.cleaned_data["name"]
-                    vm.level = form.cleaned_data["level"]
-                    vm.published = datetime.now()
-                    vm.user_flag = form.cleaned_data["user_flag"]
-                    vm.root_flag = form.cleaned_data["root_flag"]
-                    vm.disk_location = form.cleaned_data["disk_location"]
-                    vm.mac_address = form.cleaned_data["mac_address"]
-                    vm.network_name = form.cleaned_data["network"]
-                    vm.ip_addr = ip_addr
-                    vm.save()
-
-                    messages.success(
-                        request,
-                        "Successfully deployed VM!<br>Snapshoting in the background.")
-                    start_new_thread(create_snapshot, (vm.name, ))
-                    return redirect("/machines/")
-                else:
-                    messages.error(
-                        request,
-                        (
-                            "Error during a deployment. <br/>"
-                            "STDOUT: " + cmd_stdout + "<br/>"
-                            "STDERR: " + cmd_stderr + "<br/>"
-                        )
+                start_new_thread(create_snapshot, (vm.name, ))
+                return redirect("/machines/")
+            else:
+                messages.error(
+                    request,
+                    (
+                        "Error during a deployment."
                     )
+                )
     else:
         form = DeployVMForm(networks=virsh_networks)
     return render(request, "panel/deploy_vm.html", {'form': form})
