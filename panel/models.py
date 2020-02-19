@@ -19,7 +19,7 @@ class Messages(models.Model):
     read = models.BooleanField(default=False)
     trash = models.BooleanField(default=False)
 
-    def __str__():
+    def __str__(self):
         return self.id
 
 
@@ -32,7 +32,7 @@ class News(models.Model):
     created_at = models.DateTimeField()
     content = models.TextField()
 
-    def __str__():
+    def __str__(self):
         return self.title
 
 
