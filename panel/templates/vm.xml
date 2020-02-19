@@ -13,7 +13,7 @@
   <memory unit='MiB'>{{ vm_memory_in_mib }}</memory>
   <vcpu placement='static'>{{ vm_vcpu_number }}</vcpu>
   <os>
-    <type arch='x86_64' machine='pc'>hvm</type>
+    <type arch='x86_64'>hvm</type>
     <boot dev='hd'/>
   </os>
   <features>
