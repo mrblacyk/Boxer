@@ -5,7 +5,10 @@ from . import views
 urlpatterns = [
     # Dashboards
     path('statistics/', views.statistics, name='statistics'),
+
+    # News
     path('', views.news, name='news'),
+    path('news/compose/', views.news_compose, name='news_compose'),
 
     # Machine related URLs
     path('machines/', views.machines, name='machines'),

@@ -4,12 +4,21 @@
 
 {% block main_content %}
 <div><center>
+    {% for group in request.user.groups.all %}
+    {% if group.name == "sysadmin" %}
+      <div class="row p-1">
+        <div class="col">
+          <a href="/news/compose/" class="btn btn-primary">Add news <i class="far fa-edit"></i></a>
+        </div>
+      </div>
+    {% endif %}
+    {% endfor %}
     {% if news %}
         {% for item in news %}
             <div class="card" style="width: 40rem;">
               <div class="card-body" style="text-align: left;">
                 <h5 class="card-title"><b>{{ item.title }}</b></h5><br/><h9>{{ item.author }} at {{ item.created_at }}</h9><hr/>
-                <p class="card-text" style="text-align: left;">{{ item.content }}</p>
+                <p class="card-text" style="text-align: left;">{{ item.content | safe }}</p>
               </div>
             </div>
         {% endfor %}

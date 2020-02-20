@@ -634,3 +634,21 @@ def deploy_vm(request):
     else:
         form = DeployVMForm(networks=virsh_networks)
     return render(request, "panel/deploy_vm.html", {'form': form})
+
+@login_required
+def news_compose(request):
+    if request.method == "POST":
+        form = NewsForm(request.POST)
+        if form.is_valid():
+            new_news = News()
+            new_news.author = User.objects.get(username=request.user)
+            new_news.created_at = datetime.now()
+            new_news.title = request.POST.get('title')
+            new_news.content = request.POST.get('content')
+            new_news.save()
+            messages.info(request, "News added!")
+        return redirect("/")
+    form = NewsForm()
+    return render(request, "panel/news_compose.html", {
+        'form': form,
+    })
