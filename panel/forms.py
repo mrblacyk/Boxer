@@ -39,7 +39,7 @@ class MailComposeForm(forms.Form):
 
 
 class NewsForm(forms.Form):
-    subject = forms.CharField(max_length=255)
+    title = forms.CharField(max_length=255)
     content = forms.CharField(widget=SummernoteWidget())
 
 

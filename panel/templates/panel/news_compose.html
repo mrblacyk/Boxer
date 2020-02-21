@@ -1,0 +1,42 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block main_content %}
+<link rel="stylesheet" href="{% static "plugins/summernote/summernote-bs4.css" %}">
+<div class="row mx-auto w-50">
+  <div class="col-md3">
+    <div class="card card-primary card-outline">
+      <div class="card-header">
+        <h3 class="card-title">Compose New News</h3>
+      </div>
+      <form action="/news/compose/" method="POST">
+        {% csrf_token %}
+        <div class="card-body">
+          <div class="form-group">
+            {{ form.title|as_crispy_field }}
+          </div>
+          <div class="form-group">
+            {{ form.content|as_crispy_field }}
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="float-right">
+            <button type="submit" class="btn btn-primary"><i class="far fa-edit"></i> Add</button>
+          </div>
+          <button type="reset" class="btn btn-default" id="discard"><i class="fas fa-times"></i> Discard</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static "plugins/summernote/summernote-bs4.min.js" %}"></script>
+<script>
+$("#discard").click(function(){
+    window.location.href = "/";
+});
+</script>
+{% endblock %}
