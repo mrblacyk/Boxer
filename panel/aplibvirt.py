@@ -57,6 +57,33 @@ def listNetworks(virt_conn: libvirt.virConnect) -> list:
     return virt_conn.listAllNetworks()
 
 
+def addOrUpdateHost(
+        virt_conn: libvirt.virConnect,
+        network_name: str, mac: str, ip: str) -> bool:
+    """ Add or update host static IP assignment in DHCP server
+
+This definition is taken from otherwiseguy repo from github:
+https://github.com/otherwiseguy/virt-add-static-dhcp
+Adjusted to this repo needs
+"""
+    virt_conn = reassureConnection(virt_conn)
+
+    virt_network = virt_conn.networkLookupByName(network_name)
+
+    cmd = libvirt.VIR_NETWORK_UPDATE_COMMAND_MODIFY
+    section = libvirt.VIR_NETWORK_SECTION_IP_DHCP_HOST
+    xml = "<host mac='%s' ip='%s'/>" % (mac, ip)
+    flags = (libvirt.VIR_NETWORK_UPDATE_AFFECT_LIVE |
+             libvirt.VIR_NETWORK_UPDATE_AFFECT_CONFIG)
+    try:
+        virt_network.update(cmd, section, -1, xml, flags)
+    except:
+        cmd = libvirt.VIR_NETWORK_UPDATE_COMMAND_ADD_FIRST
+        virt_network.update(cmd, section, -1, xml, flags)
+
+    return True
+
+
 def _machineOperation(
         virt_conn: libvirt.virConnect,
         domain_name: str,

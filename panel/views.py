@@ -590,17 +590,23 @@ def deploy_vm(request):
                 request.error(request, "No IPs avaialble")
                 return redirect("/sys/deploy-vm/")
             ip_addr = str(start_dhcp + vm_len)
-            # mac_addr = form.cleaned_data["mac_address"]
-            # network_name = form.cleaned_data["network"]
-            # add_ip_cmd = "sudo virsh net-update %s add-last ip-dhcp-host --xml \"<host mac='%s' ip='%s'/>\" --live --config" % (network_name, mac_addr, ip_addr)
+            mac_addr = form.cleaned_data["mac_address"]
+            network_name = form.cleaned_data["network"]
 
-            # cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(add_ip_cmd)
+            add_mac_result = aplibvirt.addOrUpdateHost(
+                virt_conn, network_name, mac_addr, ip_addr
+            )
 
-            # if cmd_code:
-            #     messages.warning(
-            #         request,
-            #         "Failed to assign static IP. Expect DHCP assigned IP."
-            #     )
+            if not add_mac_result:
+                messages.warning(
+                    request,
+                    "Failed to assign static IP. Expect DHCP assigned IP."
+                )
+            else:
+                messages.success(
+                    request,
+                    f"IP Address assigned: {ip_addr}"
+                )
 
             vm_created = aplibvirt.createMachine(virt_conn, vm_virsh_file)
 
