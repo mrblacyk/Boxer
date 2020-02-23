@@ -61,8 +61,20 @@ class VirtualMachine(models.Model):
     mac_address = models.CharField(max_length=255, editable=False)
     network_name = models.CharField(max_length=255, editable=False)
     published = models.DateTimeField(editable=False)
-    user_owned = models.ManyToManyField(User, blank=True, related_name="user_owned", editable=False)
-    root_owned = models.ManyToManyField(User, blank=True, related_name="root_owned", editable=False)
+    user_owned = models.ManyToManyField(
+        User, blank=True, related_name="user_owned", editable=False
+    )
+    user_fb = models.ForeignKey(
+        User, blank=True, editable=False, related_name="user_fb",
+        on_delete=models.SET_NULL, null=True
+    )
+    root_owned = models.ManyToManyField(
+        User, blank=True, related_name="root_owned", editable=False
+    )
+    root_fb = models.ForeignKey(
+        User, blank=True, editable=False, related_name="root_fb",
+        on_delete=models.SET_NULL, null=True
+    )
     ip_addr = models.GenericIPAddressField()
     deployed = models.BooleanField(default=False)
     lock = models.BooleanField(default=False)

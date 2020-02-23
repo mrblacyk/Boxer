@@ -15,14 +15,15 @@
             </div><br/><br/>
             <h1>{{ object.name }}</h1>
             <h3>{{ object.ip_addr }}</h3>
+            <h5>{{ object.level }}</h5>
         </div>
         <div class="col" style="background-color: #d1d3d4; border-radius: 2px; padding: 2px; margin: 20px; text-align: left; margin-left: 10px;">
             <ul class="list-group list-group-flush" style="background-color: #d1d3d4">
               <li class="list-group-item"><b># First Bloods</b></li>
-              <li class="list-group-item">User</li>
-              <li class="list-group-item">-</li>
-              <li class="list-group-item">Root</li>
-              <li class="list-group-item">-</li>
+              <li class="list-group-item">User FB</li>
+              <li class="list-group-item">{% if object.user_fb %}{{ object.user_fb }}{% else %} - {% endif %}</li>
+              <li class="list-group-item">Root FB</li>
+              <li class="list-group-item">{% if object.root_fb %}{{ object.root_fb }}{% else %} - {% endif %}</li>
             </ul>
         </div>
     </div>

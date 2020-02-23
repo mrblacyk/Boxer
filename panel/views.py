@@ -196,9 +196,15 @@ def send_flag(request, machine_id):
         vm = VirtualMachine.objects.filter(id=machine_id)
         if vm:
             if request.POST.get("flag") == vm[0].user_flag:
+                if vm[0].user_owned.count() == 0:
+                    vm[0].user_fb = request.user
+                    vm[0].save()
                 vm[0].user_owned.add(request.user)
                 return HttpResponse(status=281)
             elif request.POST.get("flag") == vm[0].root_flag:
+                if vm[0].root_owned.count() == 0:
+                    vm[0].root_fb = request.user
+                    vm[0].save()
                 vm[0].root_owned.add(request.user)
                 return HttpResponse(status=282)
     return HttpResponse(status=400)
