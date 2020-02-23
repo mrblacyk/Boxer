@@ -659,3 +659,25 @@ def news_compose(request):
     return render(request, "panel/news_compose.html", {
         'form': form,
     })
+
+
+@login_required
+def convert_disk(request):
+    if request.method == "POST":
+        form = ConvertDiskForm(request.POST)
+        if form.is_valid():
+
+            messages.success(
+                request,
+                "Disk scheduled to be converted. " +
+                "You will receive a message upon completion."
+            )
+            start_new_thread(
+                aplibvirt.convertDisk, (request, request.POST["disk_location"])
+            )
+            return redirect("/sys/convert/")
+    if 'form' not in locals():
+        form = ConvertDiskForm()
+    return render(request, "panel/convert_disk.html", {
+        'form': form,
+    })

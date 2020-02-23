@@ -1,5 +1,10 @@
 from subprocess import PIPE, run as s_run
 from time import sleep
+from panel.models import Messages
+from datetime import datetime
+from re import search as search_regex
+from django.contrib import messages
+from os import remove
 
 import libvirt
 
@@ -21,6 +26,53 @@ def callCmd(command: str) -> [str, str, int]:
         command.split(), stdout=PIPE, stderr=PIPE
     )
     return cmd.stdout.decode(), cmd.stderr.decode(), cmd.returncode
+
+
+def convertDisk(request, disk_location: str) -> str:
+    """ Runs qemu-img info on a file and returns file foramt """
+
+    cmd_stdout, cmd_stderr, cmd_code = callCmd(
+        "qemu-img info " + disk_location
+    )
+
+    if cmd_code:
+        messages.error(
+            request,
+            "STDOUT: " + cmd_stdout + "\nSTDERR: " + cmd_stderr
+        )
+    else:
+        file_format = search_regex(
+            "(?<=file format:\s)(.*)", cmd_stdout).group(0)
+        if file_format == "qcow2":
+            messages.error(request, "Qcow2 disk already")
+        cmd_stdout, cmd_stderr, cmd_code = callCmd(
+            "qemu-img convert -f " + file_format + " -O qcow2 " +
+            disk_location + " " + disk_location.replace(file_format, "qcow2")
+        )
+        if not cmd_code:
+            message = Messages()
+            message.content = f"""Disk converted!<br/>
+<br/>
+It is available under the location of:<br/>
+<br/>
+<br/>
+<b>{disk_location.replace(file_format, "qcow2")}</b><br/><br/>
+Previous files was removed.<br/>
+--<br/>
+Thanks,<br/>
+SYSTEM
+"""
+            message.sender = request.user
+            message.receiver = request.user
+            message.subject = "Disk conversion to qcow2"
+            message.created_at = datetime.now()
+            message.save()
+            _ = remove(disk_location)
+        else:
+            messages.error(
+                request,
+                "STDOUT: " + cmd_stdout + "\nSTDERR: " + cmd_stderr
+            )
 
 
 def connect(URI: str = "qemu:///system") -> libvirt.virConnect:

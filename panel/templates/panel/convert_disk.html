@@ -1,0 +1,24 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block main_content %}
+<center>
+<form method="POST" action="/sys/convert/"id="upload-form-modal">
+        <div class="card card-primary card-outline" style="width: 50%">
+              <div class="card-header">
+                <b>This convertion is needed if the VM disk is not in qcow2 format.<br>Only qcow2 format allows for internal snapshots which the platform utilises.</b><br><br>
+        {% csrf_token %}
+
+        {{ form|crispy }}
+
+    </div>
+        <div class="card-footer">
+          <div class="float-right">
+            <button type="submit" class="btn btn-primary">Convert</button>
+          </div>
+        </div>
+    </div>
+    </form>
+</center>
+{% endblock %}

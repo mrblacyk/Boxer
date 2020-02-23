@@ -43,6 +43,12 @@ class NewsForm(forms.Form):
     content = forms.CharField(widget=SummernoteWidget())
 
 
+class ConvertDiskForm(forms.Form):
+    disk_location = forms.CharField(
+        max_length=255, label="Disk location to convert"
+    )
+
+
 class DeployVMForm(forms.Form):
     name = forms.CharField(
         max_length=255, label="VM Name",
@@ -54,7 +60,7 @@ class DeployVMForm(forms.Form):
                  ("Hard", "Hard"), ("Insane", "Insane")]
     )
     disk_location = forms.CharField(
-        max_length=255, label="Disk location",
+        max_length=255, label="Disk location (only qcow2 files!)",
         help_text="Do not escape spaces or any characters"
     )
     vcpu = forms.IntegerField(
@@ -114,6 +120,8 @@ class DeployVMForm(forms.Form):
         else:
             self.cleaned_data["disk_type"] = search_regex(
                 "(?<=file format:\s)(.*)", cmd_stdout).group(0)
+            if self.cleaned_data["disk_type"] != "qcow2":
+                self.add_error("disk_location", "Only qcow2 disk are allowed!")
 
         if not self.cleaned_data.get("mac_address", None):
             # Generate random mac address
