@@ -90,7 +90,7 @@ class DeployVMForm(forms.Form):
                     "Name: " + a,
                     b,
                     "Autostart: " + c,
-                    "Running: " + d
+                    "Persistent: " + d,
                 ])])
             networks.append(nonexist)
         else:

@@ -548,15 +548,15 @@ def create_snapshot(vm_name):
 @login_required
 def deploy_vm(request):
 
-    cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
-        "sudo virsh net-list --all"
-    )
+    virsh_networks = [[
+        net.name(),
+        "active" if net.isActive() else "inactive",
+        str(net.autostart()),
+        str(net.isPersistent()),
+    ] for net in aplibvirt.listNetworks(virt_conn)]
 
-    if not cmd_code:
-        virsh_networks = [x.split() for x in cmd_stdout.split("\n")[2:]]
-    else:
+    if not virsh_networks:
         messages.error(request, "Could not retrieve virsh networks.")
-        virsh_networks = []
 
     if request.method == "POST":
         form = DeployVMForm(request.POST, networks=virsh_networks)
@@ -634,6 +634,7 @@ def deploy_vm(request):
     else:
         form = DeployVMForm(networks=virsh_networks)
     return render(request, "panel/deploy_vm.html", {'form': form})
+
 
 @login_required
 def news_compose(request):

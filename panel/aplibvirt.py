@@ -49,6 +49,14 @@ def reassureConnection(virt_conn: libvirt.virConnect) -> libvirt.virConnect:
         )
 
 
+def listNetworks(virt_conn: libvirt.virConnect) -> list:
+    """ Return list of libvirt.virNetwork objects """
+
+    virt_conn = reassureConnection(virt_conn)
+
+    return virt_conn.listAllNetworks()
+
+
 def _machineOperation(
         virt_conn: libvirt.virConnect,
         domain_name: str,
