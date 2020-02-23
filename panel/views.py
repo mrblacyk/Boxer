@@ -26,6 +26,9 @@ import json
 global virt_conn
 virt_conn = aplibvirt.connect()
 
+global INIT_SNAP_NAME
+INIT_SNAP_NAME = "init_snapshot"
+
 # Create your views here.
 
 
@@ -147,8 +150,9 @@ def stop_machine(request, machine_id):
         vm_name = VirtualMachine.objects.get(id=machine_id).name
         try:
             vm_state, vm_already_stopped = aplibvirt.stopMachine(
-                virt_conn, vm_name)
-        except (libvirtError, Exception):
+                virt_conn, vm_name, True)
+            _ = aplibvirt.revertSnapshot(virt_conn, vm_name, INIT_SNAP_NAME)
+        except (libvirtError, Exception) as e:
             return HttpResponse(status=400)
 
         if vm_already_stopped:
@@ -336,12 +340,16 @@ def machines(request):
             else:
                 status = "UNKNOWN"
 
+        user_count = vm.user_owned.count()
+        root_count = vm.root_owned.count()
+
         context['machines'].append({
             'name': vm.name,
             'level': vm.level,
             'status': status,
             'publish_date': vm.published,
             'user': user_flag, 'root': root_flag,
+            'user_count': user_count, 'root_count': root_count,
             'id': vm.id,
         })
 
@@ -535,7 +543,7 @@ def create_snapshot(vm_name):
         vm.lock = True
         vm.save()
 
-        aplibvirt.createSnapshot(virt_conn, vm_name, "init_snapshot")
+        aplibvirt.createSnapshot(virt_conn, vm_name, INIT_SNAP_NAME)
 
         # Success
         vm.lock = False

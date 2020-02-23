@@ -51,7 +51,7 @@
                             {{ machine.level }}
                         </td>
                         <td>
-                            <i class="fas fa-user" style="{% if machine.user %}color: darkblue;{% else %}opacity: 0.3{% endif %}" id="user-{{ machine.id }}"></i> <i class="fas fa-user-secret" style="{% if machine.root %}color: #be0000;{% else %}opacity: 0.3{% endif %};" id="root-{{ machine.id }}"></i>
+                            <i class="fas fa-user" style="{% if machine.user %}color: darkblue;{% else %}opacity: 0.3{% endif %}" id="user-{{ machine.id }}">{{ machine.user_count }}</i> <i class="fas fa-user-secret" style="{% if machine.root %}color: #be0000;{% else %}opacity: 0.3{% endif %};" id="root-{{ machine.id }}">{{ machine.root_count }}</i>
                         </td>
                         <td class="project-state" id="machine1-state-{{ machine.id }}">
                           {% if machine.status == 'RUNNING' %}

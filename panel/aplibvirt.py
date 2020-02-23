@@ -139,7 +139,8 @@ Adjusted to this repo needs
 def _machineOperation(
         virt_conn: libvirt.virConnect,
         domain_name: str,
-        operation: str) -> [int, bool]:
+        operation: str,
+        force: bool = False) -> [int, bool]:
     """ Do not export/import this function """
 
     try:
@@ -157,6 +158,9 @@ def _machineOperation(
             'state_list': [MACHINE_STATE_RUNNING, ],
         },
     }
+
+    if operation == "stop" and force:
+        ops['stop']['function'] = vm.destroy
 
     if operation not in ops.keys():
         raise Exception(
@@ -201,7 +205,8 @@ def startMachine(
 
 
 def stopMachine(
-        virt_conn: libvirt.virConnect, domain_name: str) -> [int, bool]:
+        virt_conn: libvirt.virConnect, domain_name: str,
+        force: bool = False) -> [int, bool]:
     """ Stop a domain by name
     Returns a list with:
     * an integer return code,
@@ -210,7 +215,7 @@ def stopMachine(
 
     virt_conn = reassureConnection(virt_conn)
 
-    return _machineOperation(virt_conn, domain_name, "stop")
+    return _machineOperation(virt_conn, domain_name, "stop", force)
 
 
 def listMachines(virt_conn: libvirt.virConnect) -> list:
