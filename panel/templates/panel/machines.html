@@ -217,12 +217,14 @@
   function highlightUser(userid) {
     $("#user-" + userid).css('opacity', 1);
     $("#user-" + userid).css('color', 'darkblue');
+    $("#user-" + userid).html(parseInt($("#user-" + userid).html(), 10) + 1);
     return true
   }
 
   function highlightRoot(rootid) {
     $("#root-" + rootid).css('opacity', '1');
     $("#root-" + rootid).css('color', '#be0000');
+    $("#root-" + rootid).html(parseInt($("#root-" + rootid).html(), 10) + 1);
     return true
   }
 
