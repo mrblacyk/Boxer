@@ -88,6 +88,10 @@ class DeployVMForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         nonexist = ("non-exising", "Select..")
+        if 'network_default' in kwargs.keys():
+            network_default = kwargs.pop('network_default')
+        else:
+            network_default = None
         if 'networks' in kwargs.keys():
             networks = []
             networks_tmp = [x for x in kwargs.pop('networks') if len(x) == 4]
@@ -103,7 +107,14 @@ class DeployVMForm(forms.Form):
             networks = [nonexist, ]
         super().__init__(*args, **kwargs)
         self.fields["network"].choices = networks
-        self.fields["network"].initial = nonexist
+        if network_default:
+            self.fields["network"].initial = [
+                (x[0], x[1]) for x in networks if network_default == x[0]
+            ]
+            [self.fields["network"].initial] = self.fields["network"].initial
+        else:
+
+            self.fields["network"].initial = nonexist
 
     def clean(self):
         self.cleaned_data = super().clean()

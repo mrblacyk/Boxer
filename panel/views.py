@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render as render_django
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import User, AnonymousUser, Group
 from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import render_to_string
@@ -58,13 +58,13 @@ def statistics(request):
     return render(request, "panel/statistics.html", context)
 
 
-def handle_uploaded_file(f, fname):
+def _handle_uploaded_file(f, fname):
     with open('uploads/' + fname, 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
 
 
-def send_upload_email(req_user, fname, floc):
+def _send_upload_email(req_user, fname, floc):
     new_mail = Messages()
     new_mail.sender = req_user
     new_mail.receiver = req_user
@@ -95,9 +95,9 @@ def file_upload(request):
         file_name = request.POST['name'].replace(" ", "_") + "_" + str(datetime.now().microsecond) + "_" + str(request.FILES['file'])
         file_loc = path.abspath(getcwd()) + '/uploads/' + file_name
         if form.is_valid():
-            handle_uploaded_file(request.FILES['file'], file_name)
+            _handle_uploaded_file(request.FILES['file'], file_name)
             messages.success(request, "Successfully uploaded %s!<br>Check your mailbox for details." % file_name)
-            send_upload_email(request.user, str(request.FILES['file']), file_loc)
+            _send_upload_email(request.user, str(request.FILES['file']), file_loc)
             return redirect("/upload/")
         else:
             messages.warning(request, "Upload was not valid")
@@ -364,6 +364,34 @@ def machines(request):
 
 
 def login_view(request):
+    if User.objects.all().count() == 0:
+        if request.method == 'POST':
+            username = request.POST.get("username", None)
+            password = request.POST.get("password", None)
+            if not username or not password:
+                messages.error(request, "Username or password missing")
+                return redirect('login_view')
+            if not Group.objects.filter(name="sysadmin"):
+                group = Group()
+                group.name = "sysadmin"
+                group.save()
+            admin = User()
+            admin.username = username
+            admin.set_password(password)
+            admin.save()
+            admin.groups.add(Group.objects.get(name="sysadmin"))
+            admin.is_staff = True
+            admin.is_superuser = True
+            admin.save()
+            news = News()
+            news.author = admin
+            news.title = "Fresh install!"
+            news.created_at = datetime.now()
+            news.content = "This is your private HTB-like platform. Thank you for installing it!"
+            news.save()
+            return redirect('login_view')
+
+        return render(request, "panel/setup.html", {})
     if request.method == 'POST':
         username = request.POST.get("username", None)
         password = request.POST.get("password", None)
@@ -653,7 +681,12 @@ def deploy_vm(request):
                     )
                 )
     else:
-        form = DeployVMForm(networks=virsh_networks)
+        net_def = GeneralSettings.objects.filter(key="NETWORK_CONFIGURATION_NET_NAME")
+        if net_def:
+            net_def = net_def[0].value
+        else:
+            net_def = None
+        form = DeployVMForm(networks=virsh_networks, network_default=net_def)
     return render(request, "panel/deploy_vm.html", {'form': form})
 
 
