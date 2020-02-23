@@ -17,6 +17,7 @@ from netaddr import IPAddress
 from _thread import start_new_thread
 from os import path, getcwd
 from libvirt import libvirtError
+from django.views.generic.detail import DetailView
 
 import panel.aplibvirt as aplibvirt
 import json
@@ -689,3 +690,11 @@ def convert_disk(request):
     return render(request, "panel/convert_disk.html", {
         'form': form,
     })
+
+
+class VMDetailView(DetailView):
+
+    model = VirtualMachine
+
+    def get_object(self):
+        return VirtualMachine.objects.get(id=self.kwargs.get("machine_id"))

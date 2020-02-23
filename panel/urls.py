@@ -23,6 +23,10 @@ urlpatterns = [
     path('machines/flag/<uuid:machine_id>/', views.send_flag,
          name='send_flag'),
 
+    # VM Details
+    path('machines/details/<uuid:machine_id>/', views.VMDetailView.as_view(),
+         name='VMDetailView'),
+
     # Mailbox
     path('mailbox/', views.mailbox_inbox, name='mailbox_inbox'),
     path('mailbox/trash/', views.mailbox_trash, name='mailbox_trash'),
