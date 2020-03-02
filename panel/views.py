@@ -454,75 +454,33 @@ def nat(request):
                 "nat.xml",
                 result_dict
             )
-            with open("nat_config.xml", "w") as fppp:
-                fppp.write(nat_virsh_file)
-                fppp.flush()
-            with NamedTemporaryFile() as fp:
-                fp.write(nat_virsh_file.encode())
-                fp.flush()
 
-                cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
-                    "sudo virsh net-define " + fp.name
-                )
+            if aplibvirt.createNetwork(virt_conn, nat_virsh_file):
+                for key, value in result_dict.items():
+                    full_key = 'NETWORK_CONFIGURATION_' + key.upper()
+                    if GeneralSettings.objects.filter(key=full_key):
+                        tmp = GeneralSettings.objects.get(key=full_key)
+                    else:
+                        tmp = GeneralSettings()
+                        tmp.key = full_key
+                    tmp.value = value
+                    tmp.save()
+                    del tmp
 
-                if cmd_code and (
-                        "defined" not in cmd_stdout or
-                        "defined" not in cmd_stderr):
-                    messages.error(
-                        request,
-                        "Error occured during network definition: <br/><br/>" +
-                        fp.name + "<br/>STDOUT:<br/>" +
-                        cmd_stdout.replace("\n", "<br/>") +
-                        "<br/>STDERR:<br/>" +
-                        cmd_stderr.replace("\n", "<br/>")
-                    )
-                    return redirect("/sys/nat/")
-
-            cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
-                "sudo virsh net-start " + network_name
-            )
-            if cmd_code:
-                messages.error(
-                    request,
-                    "Error occured during start of the network: <br/><br/>" +
-                    "<br/>STDOUT:<br/>" +
-                    cmd_stdout.replace("\n", "<br/>") +
-                    "<br/>STDERR:<br/>" +
-                    cmd_stderr.replace("\n", "<br/>")
-                )
-                return redirect("/sys/nat/")
-            cmd_stdout, cmd_stderr, cmd_code = aplibvirt.callCmd(
-                "sudo virsh net-autostart " + network_name
-            )
-            if cmd_code:
-                messages.error(
-                    request,
-                    "Error occured during setting autostart of " +
-                    "the network: <br/><br/>" +
-                    "<br/>STDOUT:<br/>" +
-                    cmd_stdout.replace("\n", "<br/>") +
-                    "<br/>STDERR:<br/>" +
-                    cmd_stderr.replace("\n", "<br/>")
-                )
-                return redirect("/sys/nat/")
-
-            for key, value in result_dict.items():
-                full_key = 'NETWORK_CONFIGURATION_' + key.upper()
-                if GeneralSettings.objects.filter(key=full_key):
-                    tmp = GeneralSettings.objects.get(key=full_key)
-                else:
-                    tmp = GeneralSettings()
-                    tmp.key = full_key
-                tmp.value = value
+                tmp = GeneralSettings()
+                tmp.key = "NETWORK_CONFIGURED"
+                tmp.value = True
                 tmp.save()
                 del tmp
-
-            tmp = GeneralSettings()
-            tmp.key = "NETWORK_CONFIGURED"
-            tmp.value = True
-            tmp.save()
-            del tmp
-            return redirect("/sys/nat/")
+                return redirect("/sys/nat/")
+            else:
+                messages.error(
+                    request,
+                    "Fatal error occured during network definition."
+                )
+        else:
+            form = NatForm(request.POST, interfaces=if_nameindex())
+            return render(request, "panel/nat.html", {'form': form})
 
     elif GeneralSettings.objects.filter(key="NETWORK_CONFIGURED"):
         net_config_dict = {
@@ -536,16 +494,13 @@ def nat(request):
         }
         if request.method == "POST":
             if request.POST.get('delete', '') == 'config':
-                config_keys = [
-                    'netmask',
-                    'ifname',
-                    'net_name',
-                    'gateway',
-                    'host_ip',
-                    'dhcp_start',
-                    'dhcp_end',
-                ]
-                for key in config_keys:
+                net_name = GeneralSettings.objects.get(
+                    key="NETWORK_CONFIGURATION_NET_NAME"
+                ).value
+
+                aplibvirt.deleteNetwork(virt_conn, net_name)
+
+                for key in net_config_dict.keys():
                     net_config_dict[key] = GeneralSettings.objects.get(
                         key="NETWORK_CONFIGURATION_" + key.upper()
                     ).delete()

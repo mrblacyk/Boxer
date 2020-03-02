@@ -304,3 +304,35 @@ def translateMachineState(state: int) -> str:
         return "PAUSED"
     else:
         return "UNKNOWN"
+
+
+def createNetwork(virt_conn: libvirt.virConnect, xml: str) -> bool:
+    """ Define and start a network """
+
+    virt_conn = reassureConnection(virt_conn)
+
+    try:
+        network = virt_conn.networkDefineXML(xml)
+    except libvirt.libvirtError:
+        return False
+
+    network.setAutostart(True)
+    network.create()
+
+    return True
+
+
+def deleteNetwork(virt_conn: libvirt.virConnect, network_name: str) -> bool:
+    """ Undefine and destroy a network """
+
+    virt_conn = reassureConnection(virt_conn)
+
+    try:
+        network = virt_conn.networkLookupByName(network_name)
+    except libvirt.libvirtError:
+        return False
+
+    network.destroy()
+    network.undefine()
+
+    return True
