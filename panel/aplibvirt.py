@@ -338,3 +338,17 @@ def deleteNetwork(virt_conn: libvirt.virConnect, network_name: str) -> bool:
     network.undefine()
 
     return True
+
+
+def checkIfNetworkExists(
+        virt_conn: libvirt.virConnect, network_name: str) -> bool:
+    """ Check if network exists """
+
+    virt_conn = reassureConnection(virt_conn)
+
+    try:
+        virt_conn.networkLookupByName(network_name)
+    except libvirt.libvirtError:
+        return False
+
+    return True

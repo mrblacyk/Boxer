@@ -481,6 +481,13 @@ def nat(request):
             dhcp_start = form.cleaned_data.get('dhcp_start')
             dhcp_end = form.cleaned_data.get('dhcp_end')
 
+            if aplibvirt.checkIfNetworkExists(virt_conn, network_name):
+                print("existsssss")
+                messages.error(
+                    request, "Network with that name already exists!"
+                )
+                return redirect("/sys/nat/")
+
             result_dict = {
                 'netmask': netmask,
                 'ifname': bridge_name,
