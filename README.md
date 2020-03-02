@@ -32,7 +32,6 @@ pipenv --site-packages install
 
 ```bash
 pipenv run python manage.py migrate
-pipenv run python manage.py createsuperuser
 ```
 
 # Run
