@@ -45,9 +45,11 @@ def convertDisk(request, disk_location: str) -> str:
             "(?<=file format:\s)(.*)", cmd_stdout).group(0)
         if file_format == "qcow2":
             messages.error(request, "Qcow2 disk already")
+        _, _, _ = callCmd("mv " + disk_location + disk_location + ".lock")
         cmd_stdout, cmd_stderr, cmd_code = callCmd(
             "qemu-img convert -f " + file_format + " -O qcow2 " +
-            disk_location + " " + disk_location.replace(file_format, "qcow2")
+            disk_location + ".lock " +
+            disk_location.replace(file_format, "qcow2")
         )
         if not cmd_code:
             message = Messages()

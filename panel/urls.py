@@ -44,5 +44,6 @@ urlpatterns = [
     path('sys/nat/', views.nat, name='nat'),
     path('sys/deploy-vm/', views.deploy_vm, name='deploy_vm'),
     path('sys/convert/', views.convert_disk, name='convert_disk'),
+    path('sys/config/', views.config_site, name='config_site'),
     path('upload/', views.file_upload, name='file_upload'),
 ]

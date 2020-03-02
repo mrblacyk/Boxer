@@ -1,0 +1,24 @@
+{% extends 'panel/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block main_content %}
+
+<center>
+<form method="POST" action="/sys/config/" enctype="multipart/form-data" id="upload-form-modal">
+        <div class="card card-primary card-outline" style="width: 50%">
+              <div class="card-header">
+        {% csrf_token %}
+
+        {{ form|crispy|safe }}
+
+    </div>
+        <div class="card-footer">
+          <div class="float-right">
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </div>
+    </div>
+    </form>
+</center>
+{% endblock %}

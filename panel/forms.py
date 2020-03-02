@@ -1,12 +1,13 @@
 from django import forms
-from django_summernote.widgets import SummernoteWidget
+from django_summernote.widgets import SummernoteInplaceWidget
 from socket import if_nameindex
 from netaddr import IPAddress, IPNetwork
 from netaddr.core import AddrFormatError
 from subprocess import PIPE, run as s_run
 from re import search as search_regex
 from random import randrange
-from .models import VirtualMachine
+from .models import VirtualMachine, GeneralSettings
+from html import escape
 # from django.core.validators import FileExtensionValidator
 
 
@@ -32,15 +33,55 @@ class UploadFileForm(forms.Form):
             self.add_error("name", "Machine name is already taken")
 
 
+class ConfigForm(forms.Form):
+    html_title = forms.CharField(max_length=255)
+    page_title = forms.CharField(max_length=20)
+    contact_url = forms.URLField(
+        required=False,
+        help_text="If this is empty, button will <b>NOT</b> appear"
+    )
+    contact_url_text = forms.CharField(max_length=255)
+    contact_text = forms.CharField(widget=SummernoteInplaceWidget())
+    footer = forms.CharField(widget=SummernoteInplaceWidget())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        gs_field = GeneralSettings.objects.filter(key="GS_FOOTER_TEXT")
+        if gs_field:
+            self.fields['footer'].initial = escape(gs_field[0].value)
+            pass
+
+        gs_field = GeneralSettings.objects.filter(key="GS_HTMLTITLE_TEXT")
+        if gs_field:
+            self.fields['html_title'].initial = escape(gs_field[0].value)
+
+        gs_field = GeneralSettings.objects.filter(key="GS_PAGETITLE_TEXT")
+        if gs_field:
+            self.fields['page_title'].initial = escape(gs_field[0].value)
+
+        gs_field = GeneralSettings.objects.filter(key="GS_CONTACT_URL")
+        if gs_field and gs_field[0].value:
+            self.fields['contact_url'].initial = escape(gs_field[0].value)
+
+        gs_field = GeneralSettings.objects.filter(key="GS_CONTACT_URL_TEXT")
+        if gs_field:
+            self.fields['contact_url_text'].initial = escape(gs_field[0].value)
+
+        gs_field = GeneralSettings.objects.filter(key="GS_CONTACT_TEXT")
+        if gs_field:
+            self.fields['contact_text'].initial = escape(gs_field[0].value)
+
+
 class MailComposeForm(forms.Form):
     receiver = forms.CharField(max_length=255)
     subject = forms.CharField(max_length=255)
-    content = forms.CharField(widget=SummernoteWidget())
+    content = forms.CharField(widget=SummernoteInplaceWidget())
 
 
 class NewsForm(forms.Form):
     title = forms.CharField(max_length=255)
-    content = forms.CharField(widget=SummernoteWidget())
+    content = forms.CharField(widget=SummernoteInplaceWidget())
 
 
 class ConvertDiskForm(forms.Form):

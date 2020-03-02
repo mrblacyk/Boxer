@@ -34,6 +34,20 @@ INIT_SNAP_NAME = "init_snapshot"
 
 
 def render(*args, **kwargs):
+    gs = {}
+    if GeneralSettings.objects.filter(key__contains="GS"):
+        gs['pagetitle'] = GeneralSettings.objects.get(
+            key='GS_PAGETITLE_TEXT').value
+        gs['htmltitle'] = GeneralSettings.objects.get(
+            key='GS_HTMLTITLE_TEXT').value
+        gs['footer'] = GeneralSettings.objects.get(
+            key='GS_FOOTER_TEXT').value
+        gs['contact_text'] = GeneralSettings.objects.get(
+            key='GS_CONTACT_TEXT').value
+        gs['contact_url'] = GeneralSettings.objects.get(
+            key='GS_CONTACT_URL').value
+        gs['contact_url_text'] = GeneralSettings.objects.get(
+            key='GS_CONTACT_URL_TEXT').value
     user = None
     for index, argument in enumerate(args):
         if index == 0:
@@ -42,11 +56,14 @@ def render(*args, **kwargs):
     if not isinstance(user, AnonymousUser):
         unread_count = Messages.objects.filter(
             receiver=user, read=False).count()
-        if unread_count:
-            for index, argument in enumerate(args):
-                if index == 2:
-                    argument.update({'unread': unread_count})
-                    break
+    else:
+        unread_count = False
+    for index, argument in enumerate(args):
+        if index == 2:
+            if unread_count:
+                argument.update({'unread': unread_count})
+            argument.update({'gs': gs})
+            break
 
     return render_django(*args, **kwargs)
 
@@ -389,6 +406,31 @@ def login_view(request):
             news.created_at = datetime.now()
             news.content = "This is your private HTB-like platform. Thank you for installing it!"
             news.save()
+            gs = GeneralSettings()
+            gs.key = "GS_FOOTER_TEXT"
+            gs.value = "Your <b>Footer</b> - 2020"
+            gs.save()
+            gs = GeneralSettings()
+            gs.key = "GS_CONTACT_TEXT"
+            gs.value = "Please see github issues first before creating a new one!"
+            gs.save()
+            gs = GeneralSettings()
+            gs.key = "GS_CONTACT_URL"
+            gs.value = None
+            gs.save()
+            gs = GeneralSettings()
+            gs.key = "GS_CONTACT_URL_TEXT"
+            gs.value = "Button Value"
+            gs.save()
+            gs = GeneralSettings()
+            gs.key = "GS_HTMLTITLE_TEXT"
+            gs.value = "YourPlatformName - Lab Platform"
+            gs.save()
+            gs = GeneralSettings()
+            gs.key = "GS_PAGETITLE_TEXT"
+            gs.value = "YourPlatformName"
+            gs.save()
+
             return redirect('login_view')
 
         return render(request, "panel/setup.html", {})
@@ -692,3 +734,46 @@ class VMDetailView(DetailView):
 
     def get_object(self):
         return VirtualMachine.objects.get(id=self.kwargs.get("machine_id"))
+
+
+@login_required
+def config_site(request):
+    if request.method == "POST":
+        form = ConfigForm(request.POST)
+        if form.is_valid():
+            gs_field = GeneralSettings.objects.filter(key="GS_FOOTER_TEXT")
+            if gs_field:
+                gs_field[0].value = request.POST.get('footer')
+                gs_field[0].save()
+
+            gs_field = GeneralSettings.objects.filter(key="GS_HTMLTITLE_TEXT")
+            if gs_field:
+                gs_field[0].value = request.POST.get('html_title')
+                gs_field[0].save()
+
+            gs_field = GeneralSettings.objects.filter(key="GS_PAGETITLE_TEXT")
+            if gs_field:
+                gs_field[0].value = request.POST.get('page_title')
+                gs_field[0].save()
+
+            gs_field = GeneralSettings.objects.filter(key="GS_CONTACT_URL")
+            if gs_field:
+                gs_field[0].value = request.POST.get('contact_url')
+                gs_field[0].save()
+
+            gs_field = GeneralSettings.objects.filter(key="GS_CONTACT_URL_TEXT")
+            if gs_field:
+                gs_field[0].value = request.POST.get('contact_url_text')
+                gs_field[0].save()
+
+            gs_field = GeneralSettings.objects.filter(key="GS_CONTACT_TEXT")
+            if gs_field:
+                gs_field[0].value = request.POST.get('contact_text')
+                gs_field[0].save()
+            messages.success(request, "Successfully saved a config!")
+            return redirect("/sys/config/")
+    if 'form' not in locals():
+        form = ConfigForm()
+    return render(request, "panel/config.html", {
+        'form': form,
+    })

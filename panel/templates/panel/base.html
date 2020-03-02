@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
 
-  <title>AlphaPwners Lab Platform</title>
+  <title>{{gs.htmltitle}}</title>
 
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="{% static "plugins/fontawesome-free/css/all.min.css" }%} ">
@@ -14,8 +14,26 @@
   <link rel="stylesheet" href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
   <!-- Theme style -->
   <link rel="stylesheet" href="{% static "notdist/css/adminlte.min.css" %}">
+  <link rel="stylesheet" href="{% static "plugins/summernote/summernote-bs4.css" %}">
   <!-- Google Font: Source Sans Pro -->
   <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+  <!-- REQUIRED SCRIPTS -->
+
+  <!-- jQuery -->
+  <script src="{% static "plugins/jquery/jquery.min.js" %}"></script>
+  <!-- Bootstrap -->
+  <script src="{% static "plugins/bootstrap/js/bootstrap.bundle.min.js" %}"></script>
+  <!-- AdminLTE -->
+  <script src="{% static "notdist/js/adminlte.js" %}"></script>
+
+  <!-- OPTIONAL SCRIPTS -->
+  <script src="{% static "plugins/chart.js/Chart.min.js" %}"></script>
+  <!-- <script src="{% static "notdist/js/demo.js" %}"></script>
+  <script src="{% static "notdist/js/pages/dashboard3.js" %}"></script> -->
+  <script src="{% static "plugins/summernote/summernote-bs4.js" %}"></script>
+  <script src="{% static "notdist/js/bootstrap-notify.js" %}"></script>
+  <script src="{% static "plugins/bootstrap-autocomplete/js/bootstrap-autocomplete.js" %}"></script>
+
 </head>
 
 <body class="hold-transition sidebar-mini">
@@ -62,7 +80,7 @@
     <a href="/" class="brand-link">
       <img src="{% static "notdist/img/AdminLTELogo.png" %}" class="brand-image img-circle elevation-3"
            style="opacity: .8">
-      <span class="brand-text font-weight-light">AlphaPwners</span>
+      <span class="brand-text font-weight-light">{{gs.pagetitle}}</span>
     </a>
 
     <!-- Sidebar -->
@@ -171,6 +189,12 @@
                 </a>
               </li>
               <li class="nav-item">
+                <a href="/sys/config/" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Configuration</p>
+                </a>
+              </li>
+              <li class="nav-item">
                 <a href="/admin/" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Django Administration</p>
@@ -225,30 +249,13 @@
 
   <!-- Main Footer -->
   <footer class="main-footer">
-    <strong><a href="https://www.hackthebox.eu/teams/profile/673">AlphaPwners HackTheBox Public Profile Team</a>.</strong>
+    {{gs.footer|safe}}
     <div class="float-right d-none d-sm-inline-block">
       <b>Version</b> 0.1
     </div>
   </footer>
 </div>
 <!-- ./wrapper -->
-
-<!-- REQUIRED SCRIPTS -->
-
-<!-- jQuery -->
-<script src="{% static "plugins/jquery/jquery.min.js" %}"></script>
-<!-- Bootstrap -->
-<script src="{% static "plugins/bootstrap/js/bootstrap.bundle.min.js" %}"></script>
-<!-- AdminLTE -->
-<script src="{% static "notdist/js/adminlte.js" %}"></script>
-
-<!-- OPTIONAL SCRIPTS -->
-<script src="{% static "plugins/chart.js/Chart.min.js" %}"></script>
-<!-- <script src="{% static "notdist/js/demo.js" %}"></script>
-<script src="{% static "notdist/js/pages/dashboard3.js" %}"></script> -->
-<script src="{% static "notdist/js/bootstrap-notify.js" %}"></script>
-<script src="{% static "plugins/bootstrap-autocomplete/js/bootstrap-autocomplete.js" %}"></script>
-
 <!-- Contact Modal -->
 <div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -259,11 +266,11 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body text-justify">
-        In case of problems, please contact any team member of AlphaPwners using Discord
+      <div class="modal-body text-justify inline">
+        {{gs.contact_text|safe}}
       </div>
       <div class="modal-footer">
-        <a href="https://discord.gg/Rq2T4Wf" class="btn btn-primary">Discord Server</a>
+        {% if gs.contact_url %}<a href="{{gs.contact_url}}" class="btn btn-primary">{{gs.contact_url_text}}</a>{% endif %}
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>

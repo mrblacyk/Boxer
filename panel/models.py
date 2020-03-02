@@ -39,7 +39,7 @@ class News(models.Model):
 class GeneralSettings(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     key = models.CharField(max_length=255, unique=True)
-    value = models.CharField(max_length=1255)
+    value = models.CharField(max_length=1255, null=True)
 
     def __str__(self):
         return self.key
