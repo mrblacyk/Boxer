@@ -40,3 +40,6 @@ pipenv run python manage.py migrate
 pipenv run python manage.py runserver
 ```
 
+# Credits
+
+* @sn0w0tter for a sticky name
