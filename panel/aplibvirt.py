@@ -1,10 +1,12 @@
 from subprocess import PIPE, run as s_run
 from time import sleep
-from panel.models import Messages
+from panel.models import Messages, GeneralSettings
 from datetime import datetime
 from re import search as search_regex
 from django.contrib import messages
 from os import remove
+from paramiko import RSAKey
+from io import StringIO
 
 import libvirt
 
@@ -352,3 +354,42 @@ def checkIfNetworkExists(
         return False
 
     return True
+
+
+def createSSHKey(force: False) -> None:
+    """ Check if key is present already in the DB. If not, generate it """
+
+    key_from_db = GeneralSettings.objects.filter(key="GS_SSH_KEY")
+
+    if key_from_db and not force:
+        raise Exception("They key is already present in the database")
+
+    key = RSAKey.generate(4096)
+    pkey = StringIO()
+    key.write_private_key(pkey)
+    pkey_string = pkey.getvalue()  # Store in DB
+
+    if key_from_db:
+        key_db = key_from_db[0]
+    else:
+        key_db = GeneralSettings()
+        key_db.key = "GS_SSH_KEY"
+        key_db.save()
+
+    key_db.value = pkey_string
+
+
+def returnSSHKey() -> RSAKey:
+    """ Retrieve SSH key from db and return it as paramiko object """
+
+    key_from_db = GeneralSettings.objects.filter(key="GS_SSH_KEY")
+
+    if not key_from_db:
+        raise Exception("Not SSH key found in the database")
+
+    else:
+        key_string = key_from_db[0].value
+
+    key = RSAKey.from_private_key(key_string)
+
+    return key
