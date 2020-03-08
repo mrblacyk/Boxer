@@ -377,6 +377,7 @@ def createSSHKey(force: False) -> None:
         key_db.save()
 
     key_db.value = pkey_string
+    key_db.save()
 
 
 def returnSSHKey() -> RSAKey:
@@ -390,6 +391,8 @@ def returnSSHKey() -> RSAKey:
     else:
         key_string = key_from_db[0].value
 
-    key = RSAKey.from_private_key(key_string)
+    key_stringIO = StringIO(key_string)
+
+    key = RSAKey.from_private_key(key_stringIO)
 
     return key
