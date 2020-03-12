@@ -10,6 +10,12 @@ More detailed instruction and gifs will be produced upon completing MVP (closing
 
 Dependencies are managed by `pipenv`
 
+# Docker Hub
+
+Now, there is available a docker image available from Docker Hub. Check it out [here](https://hub.docker.com/r/mrbl4cyk/boxer).
+
+If you want to develop or install the application directly on the host, use the instructions below.
+
 # Dependencies
 
 Install packages:
