@@ -19,5 +19,5 @@ RUN apt-get update -y && \
  a2dissite default-ssl 000-default && \
  a2ensite boxer
 
-# ENTRYPOINT /entrypoint.sh
+ENTRYPOINT /entrypoint.sh
 
