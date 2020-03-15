@@ -743,12 +743,12 @@ def convert_disk(request):
     })
 
 
-class VMDetailView(DetailView):
-
-    model = VirtualMachine
-
-    def get_object(self):
-        return VirtualMachine.objects.get(id=self.kwargs.get("machine_id"))
+@login_required
+def vm_details(request, machine_id):
+    context = {}
+    if VirtualMachine.objects.filter(id=machine_id):
+        context.update({"object": VirtualMachine.objects.get(id=machine_id)})
+    return render(request, "panel/virtualmachine_detail.html", context)
 
 
 @login_required

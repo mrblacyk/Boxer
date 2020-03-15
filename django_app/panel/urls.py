@@ -24,8 +24,8 @@ urlpatterns = [
          name='send_flag'),
 
     # VM Details
-    path('machines/details/<uuid:machine_id>/', views.VMDetailView.as_view(),
-         name='VMDetailView'),
+    path('machines/details/<uuid:machine_id>/', views.vm_details,
+         name='vm_details'),
 
     # Mailbox
     path('mailbox/', views.mailbox_inbox, name='mailbox_inbox'),
@@ -46,7 +46,4 @@ urlpatterns = [
     path('sys/convert/', views.convert_disk, name='convert_disk'),
     path('sys/config/', views.config_site, name='config_site'),
     path('upload/', views.file_upload, name='file_upload'),
-
-    # Celery
-    path('test_celery/', views.test_celery, name='test_celery'),
 ]
