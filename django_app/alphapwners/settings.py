@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'panel',
     'crispy_forms',
     'django_summernote',
+    'celery',
 ]
 
 MIDDLEWARE = [
@@ -157,3 +158,6 @@ FILE_UPLOAD_HANDLERS = [
     "django.core.files.uploadhandler.MemoryFileUploadHandler",
     "django.core.files.uploadhandler.TemporaryFileUploadHandler",
 ]
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'

@@ -4,4 +4,4 @@ cd /var/www/django_app
 pipenv run ./manage.py migrate --noinput
 pipenv run ./manage.py collectstatic --noinput
 chown -R www-data:www-data /var/www/django_app
-apache2ctl -D FOREGROUND
+apache2ctl -D FOREGROUND & pipenv celery worker --app=panel.tasks

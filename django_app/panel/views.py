@@ -23,6 +23,7 @@ from io import StringIO
 
 import panel.aplibvirt as aplibvirt
 import json
+import panel.tasks as celery_tasks
 
 # Global vars
 
@@ -125,6 +126,11 @@ def file_upload(request):
         form = UploadFileForm()
     context = {'form': form}
     return render(request, "panel/upload.html", context)
+
+
+def test_celery(request):
+    celery_tasks.show_hello_world.delay()
+    return HttpResponse("Dziala")
 
 
 @login_required

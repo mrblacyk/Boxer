@@ -12,6 +12,8 @@ django-summernote = "*"
 ansible = "*"
 netaddr = "*"
 paramiko = "*"
+celery = "*"
+redis = "*"
 
 [requires]
 python_version = "3.7"
