@@ -18,8 +18,10 @@ urlpatterns = [
          name='stop_machine'),
     path('machines/reset/<uuid:machine_id>/', views.reset_machine,
          name='reset_machine'),
-    path('machines/cancel/<uuid:machine_id>/', views.cancel_reset_machine,
-         name='cancel_reset_machine'),
+    path('machines/cancelreset/<uuid:machine_id>/', views.cancelreset_action,
+         name='cancelreset_action'),
+        path('machines/cancelstop/<uuid:machine_id>/', views.cancelstop_action,
+         name='cancelstop_action'),
     path('machines/flag/<uuid:machine_id>/', views.send_flag,
          name='send_flag'),
 

@@ -20,15 +20,21 @@ from libvirt import libvirtError
 from django.views.generic.detail import DetailView
 from paramiko import RSAKey
 from io import StringIO
+from celery.task.control import revoke as revoke_celery_task
+from panel import tasks as celery_tasks
 
 import panel.aplibvirt as aplibvirt
 import json
-import panel.tasks as celery_tasks
 
 # Global vars
 
 global virt_conn
-virt_conn = aplibvirt.connect()
+if GeneralSettings.objects.filter(key="GS_QEMU_URL"):
+    virt_conn = aplibvirt.connect(
+        GeneralSettings.objects.get(key="GS_QEMU_URL").value
+    )
+else:
+    virt_conn = aplibvirt.connect()
 
 global INIT_SNAP_NAME
 INIT_SNAP_NAME = "init_snapshot"
@@ -128,11 +134,6 @@ def file_upload(request):
     return render(request, "panel/upload.html", context)
 
 
-def test_celery(request):
-    celery_tasks.show_hello_world.delay()
-    return HttpResponse("Dziala")
-
-
 @login_required
 def news(request):
     context = {}
@@ -173,21 +174,31 @@ def start_machine(request, machine_id):
 def stop_machine(request, machine_id):
     sleep(1)
     if request.method == "GET":
-        vm_name = VirtualMachine.objects.get(id=machine_id).name
-        try:
-            vm_state, vm_already_stopped = aplibvirt.stopMachine(
-                virt_conn, vm_name, True)
-            _ = aplibvirt.revertSnapshot(virt_conn, vm_name, INIT_SNAP_NAME)
-        except (libvirtError, Exception) as e:
-            return HttpResponse(status=400)
+        vm_object = VirtualMachine.objects.get(id=machine_id)
+        vm_name = vm_object.name
 
-        if vm_already_stopped:
+        if SimpleQueue.objects.filter(vm__name=vm_name, type="reset"):
+            # Machine already scheduled to reset
+            return HttpResponse(status=254)
+
+        if aplibvirt.machineStopped(virt_conn, vm_name):
             # Already stopped
             return HttpResponse(status=252)
 
-        elif vm_state == aplibvirt.MACHINE_STATE_SHUTOFF:
-                # Stopped
-                return HttpResponse(status=251)
+        elif SimpleQueue.objects.filter(vm__name=vm_name, type="stop"):
+            # Already scheduled to stop
+            return HttpResponse(status=253)
+
+        else:
+            sq = SimpleQueue()
+            sq.type = "stop"
+            sq.vm = vm_object
+            sq.task_id = celery_tasks.stop_machine.apply_async(
+                (vm_name, True), countdown=150
+            )
+            sq.save()
+            # Scheduled to stop
+            return HttpResponse(status=251)
 
     return HttpResponse(status=400)
 
@@ -196,21 +207,63 @@ def stop_machine(request, machine_id):
 def reset_machine(request, machine_id):
     sleep(1)
     if request.method == "GET":
-        # Reset scheduled
-        return HttpResponse(status=261)
-        # Already scheduled reset
-        return HttpResponse(status=262)
+        vm_object = VirtualMachine.objects.get(id=machine_id)
+        vm_name = vm_object.name
+
+        if SimpleQueue.objects.filter(vm__name=vm_name, type="stop"):
+            # Machine already scheduled to stop
+            return HttpResponse(status=264)
+
+        if SimpleQueue.objects.filter(vm__name=vm_name, type="reset"):
+            # Already scheduled to reset
+            return HttpResponse(status=262)
+
+        else:
+            sq = SimpleQueue()
+            sq.type = "reset"
+            sq.vm = vm_object
+            sq.task_id = celery_tasks.reset_machine.apply_async(
+                (vm_name, True), countdown=150
+            )
+            sq.save()
+            # Scheduled to reset
+            return HttpResponse(status=261)
+
     return HttpResponse(status=400)
 
 
 @login_required
-def cancel_reset_machine(request, machine_id):
+def cancelreset_action(request, machine_id):
     sleep(1)
     if request.method == "GET":
-        # Canceled
-        return HttpResponse(status=271)
-        # Already canceled
-        return HttpResponse(status=272)
+        if SimpleQueue.objects.filter(vm__id=machine_id, type="reset"):
+            # Reset canceled
+            reset_task = SimpleQueue.objects.filter(
+                vm__id=machine_id, type="reset"
+            )[0]
+            revoke_celery_task(reset_task.task_id, terminate=True)
+            reset_task.delete()
+            return HttpResponse(status=271)
+        else:
+            # Already cancelled
+            return HttpResponse(status=272)
+    return HttpResponse(status=400)
+
+
+@login_required
+def cancelstop_action(request, machine_id):
+    sleep(1)
+    if request.method == "GET":
+        if SimpleQueue.objects.filter(vm__id=machine_id, type="stop"):
+            # Stop canceled
+            reset_task = SimpleQueue.objects.filter(
+                vm__id=machine_id, type="stop"
+            )[0]
+            revoke_celery_task(reset_task.task_id, terminate=True)
+            reset_task.delete()
+            return HttpResponse(status=291)
+        else:
+            return HttpResponse(status=292)
     return HttpResponse(status=400)
 
 
@@ -364,6 +417,10 @@ def machines(request):
 
         if not vm.deployed:
             status = "DEPLOYING.."
+        elif SimpleQueue.objects.filter(vm__id=vm.id, type="stop"):
+            status = "SCHEDULED TO STOP"
+        elif SimpleQueue.objects.filter(vm__id=vm.id, type="reset"):
+            status = "SCHEDULED TO RESET"
         else:
             if vm.name in all_domains:
                 status = aplibvirt.translateMachineState(
@@ -371,6 +428,8 @@ def machines(request):
                 )
             else:
                 status = "UNKNOWN"
+
+
 
         user_count = vm.user_owned.count()
         root_count = vm.root_owned.count()

@@ -21,10 +21,10 @@
                       <th style="width: 10%">
                           Machine Level
                       </th>
-                      <th  style="width: 4%">
+                      <th>
                         Owns
                       </th>
-                      <th style="width: 30%" class="text-center">
+                      <th style="width: 20%" class="text-center">
                           Status
                       </th>
                       <th style="width: 20%">
@@ -58,7 +58,7 @@
                             <span class="badge badge-success">{{ machine.status }}</span>
                           {% elif machine.status == 'STOPPED' %}
                             <span class="badge badge-danger">{{ machine.status }}</span>
-                          {% elif machine.status == 'SCHEDULED FOR A RESET' %}
+                          {% elif 'SCHEDULED' in machine.status %}
                             <span class="badge badge-warning">{{ machine.status }}</span>
                           {% else %}
                             <span class="badge badge-info">{{ machine.status }}</span>
@@ -70,12 +70,12 @@
                                 <i class="fas fa-play">
                                 </i>
                             </button>
-                            <button class="btn btn-danger btn-sm" data-id="{{ machine.id }}" id="machine-stop-{{ machine.id }}" {% if machine.status == 'STOPPED' or machine.status == 'UNKNOWN' or machine.status == 'DEPLOYING..' %}disabled=disabled{% endif %}>
-                                <i class="fas fa-stop">
+                            <button class="btn btn-danger btn-sm" data-id="{{ machine.id }}" id="machine-{% if machine.status == 'SCHEDULED TO STOP' %}cancel{%endif%}stop-{{ machine.id }}" {% if machine.status == 'STOPPED' or machine.status == 'UNKNOWN' or machine.status == 'DEPLOYING..' %}disabled=disabled{% endif %}>
+                                {% if machine.status == 'SCHEDULED TO STOP' %}<i class="fas fa-ban">{% else %}<i class="fas fa-stop">{% endif %}
                                 </i>
                             </button>
-                            <button class="btn btn-warning btn-sm" data-id="{{ machine.id }}" {% if machine.status == 'SCHEDULED FOR A RESET' %}id="machine-cancel-{{ machine.id }}"{% else %}id="machine-reset-{{ machine.id }}"{% endif %} {% if machine.status == 'STOPPED' or machine.status == 'UNKNOWN' or machine.status == 'DEPLOYING..' %}disabled=disabled{% endif %}>
-                                {% if machine.status == 'SCHEDULED FOR A RESET' %}<i class="fas fa-ban">{% else %}<i class="fas fa-redo">{% endif %}
+                            <button class="btn btn-warning btn-sm" data-id="{{ machine.id }}" id="machine-{% if machine.status == 'SCHEDULED TO RESET' %}cancel{%endif%}reset-{{ machine.id }}" {% if machine.status == 'STOPPED' or machine.status == 'UNKNOWN' or machine.status == 'DEPLOYING..' %}disabled=disabled{% endif %}>
+                                {% if machine.status == 'SCHEDULED TO RESET' %}<i class="fas fa-ban">{% else %}<i class="fas fa-redo">{% endif %}
                                 </i>
                             </button>
                             <button class="btn btn-info btn-sm" data-id="{{ machine.id }}" data-toggle="modal" data-target="#flagModal" {% if machine.root and machine.user or machine.status == 'UNKNOWN' or machine.status == 'DEPLOYING..' %}disabled=disabled alt="You already both user and root!"{% endif %}>
@@ -157,34 +157,43 @@
           $("#machine1-state-" + machine_id).html('<span class="badge badge-success">RUNNING</span>');
         }
         else if (xhr.status == 251) {
-          $.notify({message: "Stoppped."},{type: 'success', offset: {y: 70, x: 20}});
-          button_object.attr("disabled", true);
-          $("#machine-start-" + machine_id).attr("disabled", false);
-          $("#machine-cancel-" + machine_id).attr('id', "machine-reset-" + machine_id);
-          $("#machine-reset-" + machine_id).html('<i class="fas fa-redo"></i>');
-          $("#machine-reset-" + machine_id).attr("disabled", true);
-          $("#machine1-state-" + machine_id).html('<span class="badge badge-danger">STOPPED</span>');
+          $.notify({message: "Stop scheduled."},{type: 'success', offset: {y: 70, x: 20}});
+          button_object.html('<i class="fas fa-ban"></i>');
+          button_object.attr('id', "machine-cancelstop-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-warning">SCHEDULED TO STOP</span>');
         }
         else if (xhr.status == 252) {
           $.notify({message: "Stopped already!"},{type: 'success', offset: {y: 70, x: 20}});
           button_object.attr("disabled", true);
           $("#machine-start-" + machine_id).attr("disabled", false);
-          $("#machine-cancel-" + machine_id).attr('id', "machine-reset-" + machine_id);
+          $("#machine-cancelstop-" + machine_id).attr('id', "machine-reset-" + machine_id);
           $("#machine-reset-" + machine_id).html('<i class="fas fa-redo"></i>');
           $("#machine-reset-" + machine_id).attr("disabled", true);
           $("#machine1-state-" + machine_id).html('<span class="badge badge-danger">STOPPED</span>');
         }
+        else if (xhr.status == 253) {
+          $.notify({message: "Stop already scheduled!"},{type: 'warning', offset: {y: 70, x: 20}});
+          button_object.html('<i class="fas fa-ban"></i>');
+          button_object.attr('id', "machine-cancelstop-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-warning">SCHEDULED TO STOP</span>');
+        }
+        else if (xhr.status == 254) {
+          $.notify({message: "Cannot schedule a stop when reset is scheduled already!"},{type: 'danger', offset: {y: 70, x: 20}});
+        }
         else if (xhr.status == 261) {
           $.notify({message: "Reset scheduled."},{type: 'success', offset: {y: 70, x: 20}});
           button_object.html('<i class="fas fa-ban"></i>');
-          button_object.attr('id', "machine-cancel-" + machine_id);
-          $("#machine1-state-" + machine_id).html('<span class="badge badge-warning">SCHEDULED FOR A RESET</span>');
+          button_object.attr('id', "machine-cancelreset-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-warning">SCHEDULED TO RESET</span>');
         }
         else if (xhr.status == 262) {
-          $.notify({message: "Reset already scheduled!"},{type: 'success', offset: {y: 70, x: 20}});
+          $.notify({message: "Reset already scheduled!"},{type: 'warning', offset: {y: 70, x: 20}});
           button_object.html('<i class="fas fa-ban"></i>');
-          button_object.attr('id', "machine-cancel-" + machine_id);
-          $("#machine1-state-" + machine_id).html('<span class="badge badge-warning">SCHEDULED FOR A RESET</span>');
+          button_object.attr('id', "machine-cancelreset-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-warning">SCHEDULED TO RESET</span>');
+        }
+        else if (xhr.status == 264) {
+          $.notify({message: "Cannot schedule a reset when stop is scheduled already!"},{type: 'danger', offset: {y: 70, x: 20}});
         }
         else if (xhr.status == 271) {
           $.notify({message: "Reset canceled."},{type: 'success', offset: {y: 70, x: 20}});
@@ -196,6 +205,18 @@
           $.notify({message: "Reset already canceled!"},{type: 'success', offset: {y: 70, x: 20}});
           button_object.html('<i class="fas fa-redo"></i>');
           button_object.attr('id', "machine-reset-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-success">RUNNING</span>');
+        }
+        else if (xhr.status == 291) {
+          $.notify({message: "Stop canceled."},{type: 'success', offset: {y: 70, x: 20}});
+          button_object.html('<i class="fas fa-stop"></i>');
+          button_object.attr('id', "machine-stop-" + machine_id);
+          $("#machine1-state-" + machine_id).html('<span class="badge badge-success">RUNNING</span>');
+        }
+        else if (xhr.status == 292) {
+          $.notify({message: "Stop already canceled!"},{type: 'success', offset: {y: 70, x: 20}});
+          button_object.html('<i class="fas fa-stop"></i>');
+          button_object.attr('id', "machine-stop-" + machine_id);
           $("#machine1-state-" + machine_id).html('<span class="badge badge-success">RUNNING</span>');
         }
       },

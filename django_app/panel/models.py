@@ -81,3 +81,12 @@ class VirtualMachine(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class SimpleQueue(models.Model):
+
+    vm = models.ForeignKey(
+        VirtualMachine, related_name="vm", on_delete=models.SET_NULL, null=True
+    )
+    type = models.CharField(max_length=5)
+    task_id = models.CharField(max_length=255)

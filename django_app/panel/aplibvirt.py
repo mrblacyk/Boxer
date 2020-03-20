@@ -222,6 +222,23 @@ def stopMachine(
     return _machineOperation(virt_conn, domain_name, "stop", force)
 
 
+def machineStopped(virt_conn: libvirt.virConnect, domain_name: str):
+
+    virt_conn = reassureConnection(virt_conn)
+
+    try:
+        vm = virt_conn.lookupByName(domain_name)
+    except libvirt.libvirtError:
+        raise Exception("No VM found with the provided name")
+
+    state = vm.state()[0]
+
+    if state in [MACHINE_STATE_SHUTDOWN, MACHINE_STATE_SHUTOFF]:
+        return True
+    else:
+        return False
+
+
 def listMachines(virt_conn: libvirt.virConnect) -> list:
     """ Return a list of machines and states
     Returns a list with:

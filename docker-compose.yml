@@ -1,0 +1,18 @@
+version: "2"
+services:
+  boxer:
+    build: .
+    container_name: boxer01
+    depends_on:
+      - redis
+    volumes:
+      - ./src:/src
+    expose:
+      - "80:80"
+    links:
+      - redis
+  redis:
+    image: redis:latest
+    container_name: redis01
+    ports:
+      - "6379:6379"
