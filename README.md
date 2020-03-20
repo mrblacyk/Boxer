@@ -10,43 +10,25 @@ More detailed instruction and gifs will be produced upon completing MVP (closing
 
 Dependencies are managed by `pipenv`
 
-# Docker Hub
+# Run & Build
+
+Everything is you need to do is to build the image and run the containers.
+
+```bash
+git clone https://github.com/mrblacyk/Boxer.git
+cd Boxer
+# apt install docker.io docker docker-compose  # if you don't have already
+docker-compuse up -d --build
+```
+
+Known "bug" is that you have to add user `www-data` to `libvirt` group. Otherwise, there is permission issue.
+
+# Docker Hub (outdated a bit)
 
 Now, there is available a docker image available from Docker Hub. Check it out [here](https://hub.docker.com/r/mrbl4cyk/boxer).
 
 If you want to develop or install the application directly on the host, use the instructions below.
 
-# Dependencies
-
-Install packages:
-
-```bash
-apt-get install pkg-config libvirt-dev
-```
-
-Install KVM:
-
-```bash
-apt-get install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
-```
-
-Install pipenv:
-
-```bash
-pipenv --site-packages install
-```
-
-# Configure Django
-
-```bash
-pipenv run python manage.py migrate
-```
-
-# Run
-
-```bash
-pipenv run python manage.py runserver
-```
 
 # Credits
 
