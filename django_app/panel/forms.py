@@ -41,6 +41,7 @@ class ConfigForm(forms.Form):
         help_text="If this is empty, button will <b>NOT</b> appear"
     )
     contact_url_text = forms.CharField(max_length=255)
+    host_loc = forms.CharField(max_length=255)
     contact_text = forms.CharField(widget=SummernoteInplaceWidget())
     footer = forms.CharField(widget=SummernoteInplaceWidget())
 
@@ -50,7 +51,6 @@ class ConfigForm(forms.Form):
         gs_field = GeneralSettings.objects.filter(key="GS_FOOTER_TEXT")
         if gs_field:
             self.fields['footer'].initial = escape(gs_field[0].value)
-            pass
 
         gs_field = GeneralSettings.objects.filter(key="GS_HTMLTITLE_TEXT")
         if gs_field:
@@ -71,6 +71,16 @@ class ConfigForm(forms.Form):
         gs_field = GeneralSettings.objects.filter(key="GS_CONTACT_TEXT")
         if gs_field:
             self.fields['contact_text'].initial = escape(gs_field[0].value)
+
+        gs_field = GeneralSettings.objects.filter(key="GS_HOST_UPLOAD_LOC")
+        if gs_field:
+            self.fields['host_loc'].initial = escape(gs_field[0].value)
+
+    def clean(self):
+        self.cleaned_data = super().clean()
+
+        if self.cleaned_data['host_loc'][-1] != "/":
+            self.cleaned_data['host_loc'] = self.cleaned_data['host_loc'] + "/"
 
 
 class MailComposeForm(forms.Form):
@@ -101,7 +111,7 @@ class DeployVMForm(forms.Form):
                  ("Hard", "Hard"), ("Insane", "Insane")]
     )
     disk_location = forms.CharField(
-        max_length=255, label="Disk location (only qcow2 files!)",
+        max_length=255, label="VM disk filename (only qcow2 files!)",
         help_text="Do not escape spaces or any characters"
     )
     vcpu = forms.IntegerField(
@@ -161,7 +171,11 @@ class DeployVMForm(forms.Form):
         self.cleaned_data = super().clean()
 
         cmd_stdout, cmd_stderr, cmd_code = callCmd(
-            ["qemu-img", "info", self.cleaned_data["disk_location"]]
+            [
+                "qemu-img", "info",
+                "/var/www/django_app/uploads/" + self.cleaned_data[
+                    "disk_location"]
+            ]
         )
 
         if cmd_code:

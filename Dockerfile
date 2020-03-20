@@ -9,7 +9,7 @@ COPY config/entrypoint.sh /entrypoint.sh
 WORKDIR "/var/www/django_app"
 
 RUN apt-get update -y && \
- apt-get install -y --no-install-recommends python3 python3-pip python3-libvirt pipenv apache2 libapache2-mod-wsgi-py3 && \
+ apt-get install -y --no-install-recommends python3 python3-pip python3-libvirt pipenv apache2 libapache2-mod-wsgi-py3 qemu-utils && \
  chmod +x /entrypoint.sh && \
  rm db.sqlite3 || true && \
  pip3 install setuptools && \

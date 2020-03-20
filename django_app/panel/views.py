@@ -30,12 +30,16 @@ import json
 # Global vars
 
 global virt_conn
-if GeneralSettings.objects.filter(key="GS_QEMU_URL"):
-    virt_conn = aplibvirt.connect(
-        GeneralSettings.objects.get(key="GS_QEMU_URL").value
-    )
-else:
+try:
+    if GeneralSettings.objects.filter(key="GS_QEMU_URL"):
+        virt_conn = aplibvirt.connect(
+            GeneralSettings.objects.get(key="GS_QEMU_URL").value
+        )
+    else:
+        virt_conn = aplibvirt.connect()
+except:
     virt_conn = aplibvirt.connect()
+
 
 global INIT_SNAP_NAME
 INIT_SNAP_NAME = "init_snapshot"
@@ -499,6 +503,10 @@ def login_view(request):
             gs.key = "GS_PAGETITLE_TEXT"
             gs.value = "YourPlatformName"
             gs.save()
+            gs = GeneralSettings()
+            gs.key = "GS_HOST_UPLOAD_LOC"
+            gs.value = ""
+            gs.save()
 
             return redirect('login_view')
 
@@ -551,7 +559,7 @@ def nat(request):
             dhcp_end = form.cleaned_data.get('dhcp_end')
 
             if aplibvirt.checkIfNetworkExists(virt_conn, network_name):
-                print("existsssss")
+
                 messages.error(
                     request, "Network with that name already exists!"
                 )
@@ -682,7 +690,9 @@ def deploy_vm(request):
                 'vm_memory_in_mib': form.cleaned_data["memory"],
                 'vm_vcpu_number': form.cleaned_data["vcpu"],
                 'vm_disk_type': form.cleaned_data["disk_type"],
-                'vm_disk_location': form.cleaned_data["disk_location"],
+                'vm_disk_location': GeneralSettings.objects.get(
+                    key="GS_HOST_UPLOAD_LOC"
+                ).value + form.cleaned_data["disk_location"],
                 'vm_mac_address': form.cleaned_data["mac_address"],
                 'vm_network_name': form.cleaned_data["network"],
             }
@@ -837,7 +847,9 @@ def config_site(request):
                 gs_field[0].value = request.POST.get('contact_url')
                 gs_field[0].save()
 
-            gs_field = GeneralSettings.objects.filter(key="GS_CONTACT_URL_TEXT")
+            gs_field = GeneralSettings.objects.filter(
+                key="GS_CONTACT_URL_TEXT"
+            )
             if gs_field:
                 gs_field[0].value = request.POST.get('contact_url_text')
                 gs_field[0].save()
@@ -845,6 +857,11 @@ def config_site(request):
             gs_field = GeneralSettings.objects.filter(key="GS_CONTACT_TEXT")
             if gs_field:
                 gs_field[0].value = request.POST.get('contact_text')
+                gs_field[0].save()
+
+            gs_field = GeneralSettings.objects.filter(key="GS_HOST_UPLOAD_LOC")
+            if gs_field:
+                gs_field[0].value = request.POST.get('host_loc')
                 gs_field[0].save()
             messages.success(request, "Successfully saved a config!")
             return redirect("/sys/config/")

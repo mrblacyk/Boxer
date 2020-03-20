@@ -30,8 +30,10 @@ def callCmd(command: str) -> [str, str, int]:
     return cmd.stdout.decode(), cmd.stderr.decode(), cmd.returncode
 
 
-def convertDisk(request, disk_location: str) -> str:
+def convertDisk(request, disk_name: str) -> str:
     """ Runs qemu-img info on a file and returns file foramt """
+
+    disk_location = "/var/www/django_app/uploads/" + disk_name
 
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
         "qemu-img info " + disk_location

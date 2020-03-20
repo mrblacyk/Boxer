@@ -133,3 +133,4 @@ dmypy.json
 
 # Upload dir in general
 uploads/
+db/
