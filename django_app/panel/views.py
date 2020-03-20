@@ -22,6 +22,7 @@ from paramiko import RSAKey
 from io import StringIO
 from celery.task.control import revoke as revoke_celery_task
 from panel import tasks as celery_tasks
+from django.views.decorators.cache import never_cache
 
 import panel.aplibvirt as aplibvirt
 import json
@@ -397,6 +398,7 @@ def mailbox_user_query(request):
 
 
 @login_required
+@never_cache
 def machines(request):
 
     context = {}
