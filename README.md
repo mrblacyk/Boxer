@@ -19,7 +19,7 @@ Have you or your team wanted a private HackTheBox platform to host your own boxe
 
 # Run & Build
 
-Everything is you need to do is to build the image and run the containers.
+Everything you need to do is to pull images and run the containers!
 
 ```bash
 # Clone the repository
