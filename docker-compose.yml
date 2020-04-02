@@ -13,8 +13,10 @@ services:
       - "80:80"
     links:
       - redis
+    restart: always
   redis:
     image: redis:latest
     container_name: boxer_redis
     expose:
       - "6379"
+    restart: always
