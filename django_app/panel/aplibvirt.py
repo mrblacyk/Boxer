@@ -7,6 +7,7 @@ from django.contrib import messages
 from os import remove
 from paramiko import RSAKey
 from io import StringIO
+from django.conf import settings
 
 import libvirt
 
@@ -33,7 +34,7 @@ def callCmd(command: str) -> [str, str, int]:
 def convertDisk(request, disk_name: str) -> str:
     """ Runs qemu-img info on a file and returns file foramt """
 
-    disk_location = "/var/www/django_app/uploads/" + disk_name
+    disk_location = settings.BASE_DIR + "/uploads/" + disk_name
 
     cmd_stdout, cmd_stderr, cmd_code = callCmd(
         "qemu-img info " + disk_location
@@ -44,17 +45,19 @@ def convertDisk(request, disk_name: str) -> str:
             request,
             "STDOUT: " + cmd_stdout + "\nSTDERR: " + cmd_stderr
         )
+        print("STDOUT: " + cmd_stdout + "\nSTDERR: " + cmd_stderr)
     else:
         file_format = search_regex(
             "(?<=file format:\s)(.*)", cmd_stdout).group(0)
         if file_format == "qcow2":
             messages.error(request, "Qcow2 disk already")
-        _, _, _ = callCmd("mv " + disk_location + disk_location + ".lock")
+        _, _, _ = callCmd("mv " + disk_location + " " + disk_location + ".lock")
         cmd_stdout, cmd_stderr, cmd_code = callCmd(
             "qemu-img convert -f " + file_format + " -O qcow2 " +
             disk_location + ".lock " +
             disk_location.replace(file_format, "qcow2")
         )
+        print("STDOUT: " + cmd_stdout + "\nSTDERR: " + cmd_stderr)
         if not cmd_code:
             message = Messages()
             message.content = f"""Disk converted!<br/>
@@ -73,7 +76,7 @@ SYSTEM
             message.subject = "Disk conversion to qcow2"
             message.created_at = datetime.now()
             message.save()
-            _ = remove(disk_location)
+            _ = remove(disk_location + ".lock")
         else:
             messages.error(
                 request,

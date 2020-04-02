@@ -435,8 +435,6 @@ def machines(request):
             else:
                 status = "UNKNOWN"
 
-
-
         user_count = vm.user_owned.count()
         root_count = vm.root_owned.count()
 
@@ -682,6 +680,13 @@ def deploy_vm(request):
     if not virsh_networks:
         messages.error(request, "Could not retrieve virsh networks.")
 
+    if not GeneralSettings.objects.get(key="GS_HOST_UPLOAD_LOC").value:
+        messages.warning(
+            request,
+            "Configure the host location disk first!"
+        )
+        return redirect("/sys/config/")
+
     if request.method == "POST":
         form = DeployVMForm(request.POST, networks=virsh_networks)
         if form.is_valid():
@@ -794,6 +799,13 @@ def news_compose(request):
 
 @login_required
 def convert_disk(request):
+    if not GeneralSettings.objects.get(key="GS_HOST_UPLOAD_LOC").value:
+        messages.warning(
+            request,
+            "Configure the host location disk first!"
+        )
+        return redirect("/sys/config/")
+
     if request.method == "POST":
         form = ConvertDiskForm(request.POST)
         if form.is_valid():
