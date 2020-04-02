@@ -16,6 +16,7 @@ Have you or your team wanted a private HackTheBox platform to host your own boxe
 * Redis used to handle delayed VM shutdowns / resets with the option to cancel them
 * Python dependencies managed by `pipenv`
 * Web panel built with Django
+* AdminLTE project for the front-end
 
 # Run & Build
 
