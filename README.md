@@ -47,7 +47,7 @@ Now, there is available a docker image available from Docker Hub. Check it out [
 
 # Contributions
 
-You are more than welcomed to contribute! I am already aware that there some mistakes like typos or a bit sketchy logic but I lack time to even fix them :(
+You are more than welcomed to contribute! I am already aware that there are some mistakes like typos or a bit sketchy logic but I lack time to even fix them :(
 
 If you want to develop and install the application directly on the host, for now you are dependant on your knowledge and common sense. I will create some instruction on how to contribute when I will have more time.
 
