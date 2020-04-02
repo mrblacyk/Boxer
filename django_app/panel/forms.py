@@ -78,9 +78,8 @@ class ConfigForm(forms.Form):
 
     def clean(self):
         self.cleaned_data = super().clean()
-
-        if self.cleaned_data['host_loc'][-1] != "/":
-            self.cleaned_data['host_loc'] = self.cleaned_data['host_loc'] + "/"
+        if self.cleaned_data["host_loc"][-1] != '/':
+            self.add_error("host_loc", "Path has to end with the (/) slash")
 
 
 class MailComposeForm(forms.Form):
