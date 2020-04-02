@@ -1,7 +1,7 @@
 version: "2"
 services:
   boxer:
-    build: .
+    image: mrbl4cyk/boxer:1.0
     container_name: boxer_core
     depends_on:
       - redis
