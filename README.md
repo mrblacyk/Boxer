@@ -6,6 +6,8 @@ Boxer is a HackTheBox alike panel for managing boxes (VMs).
 
 Have you or your team wanted a private HackTheBox platform to host your own boxes? Boxer was created just to fulfill this need! Within the HTB team, we wanted a private platform with the ease of starting up, shutting down and reseting machines exactly like in HackTheBox. Many weeks later, here comes the Boxer!
 
+![Boxer Page](EUoZCSoXYAEjPbe.jpeg)
+
 ---
 
 # Technologies
